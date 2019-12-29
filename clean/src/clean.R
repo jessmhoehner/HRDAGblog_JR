@@ -22,18 +22,20 @@ stopifnot(is.list(files)== TRUE)
 #want to add in variables which are counts of the number of times each date occurs called cases/day here or do it just before graphing?
 
 flu1 <- readr::read_delim(files$input1, delim="|") %>%
-  mutate(age = as.integer(Age)) %>%
-  mutate(DOD = as.Date(`Date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,Sex, Status), as.factor) %>%
+  clean_names() %>%
+  mutate(age = as.integer(age)) %>%
+  mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
+  mutate_at(vars(DOD,sex, status), as.factor) %>%
 write_delim(files$output1, delim="|", na= "NA")
-stopifnot(ncol(flu1) == 7 & (nrow (flu1) == 108))
+stopifnot(ncol(flu1) == 6 & (nrow (flu1) == 108))
 
 flu2 <- readr::read_delim(files$input2, delim="|") %>%
-  mutate_at(vars(Sex, Status), as.factor) %>%
-  mutate(age = as.integer(Age)) %>%
-  mutate(DOD = as.Date(`Date`, "%m/%d/%Y")) %>%
+  clean_names() %>%
+  mutate(age = as.integer(age)) %>%
+  mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
+  mutate_at(vars(DOD,sex, status), as.factor) %>%
 write_delim(files$output2, delim="|", na= "NA")
-stopifnot(ncol(flu2) == 7 & (nrow (flu2) == 974))
+stopifnot(ncol(flu2) == 6 & (nrow (flu2) == 974))
 
 
 ######done####
