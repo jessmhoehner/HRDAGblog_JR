@@ -1,7 +1,7 @@
 ---
 title: 'From Scripts to Projects: Using a Modular, Auditable, and Reproducible Workflow to Investigate a Potential Epidemic'
 author: "Jessica Randall"
-date: "12/22/2019"
+date: "12/29/2019"
 output:
   bookdown::pdf_document2:
     latex_engine: xelatex
