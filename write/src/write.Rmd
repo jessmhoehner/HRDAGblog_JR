@@ -15,37 +15,46 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Having been a big fan of HRDAG's work and fellow alumna of Emory's Rollin's School of Public Health, I have been delighted to have had opportunities to chat with both Megan and Patrick over the last year. I was equally thrilled when Patrick asked if I might want to work on an epidemiological problem the team had been presented with. While I had read about the organization's modular workflow (link) and watched Patrick's talk on how to do principled data processing (link), a lot of it was initially beyond my scope as someone who had only formally learned SAS and dabbled in self-taught Python and R. I fully admit to my R code looking suspiciously similar to all of the examples of amateur coding that Tarak uses in his post on why .Rproj is harmful to reproducible and auditable data science (link). 
 
-Excited to help out where I could and learn from someone I consider a programming maestro, I was undettered by the prospect of a crash course in the HRDAG process necessitated by the inherent immediacy of the need for an answer; were the data suggestive of an epidemic or not? To that end and with a great deal of Patrick's guidance I began to learn Vim, shift towards working mainly in the command line as opposed to R Studio, and start thinking of scripts in terms of a larger project architecture as opposed to one-off bits of code that I'd write per project. 
+Excited to help out where I could and learn from a master, I was undettered by the prospect of a crash course in the HRDAG process necessitated by the inherent immediacy of the need for an answer; were the data suggestive of an epidemic or not? To that end and with a great deal of Patrick's guidance I began to shift towards working mainly in the command line as opposed to R Studio and to start thinking of scripts in terms of a larger project architecture as opposed to one-off bits of code that I'd write per project. 
 
 As I worked, Patrick also encouraged me to keep notes on what I liked and disliked about the process, where I felt it made things easier and where I noticed friction. The following post summarizes those notes and the work that went into determining the answers to the client's question. 
 
-## Setup {-}
+## Setup and Import {-}
 
-To begin the project, we start with a Makefile. The Makefile provides an outline of our work not only for us to read but for the computer to read as well. With Makefileshow we transform any spreadsheets we pu
+To begin the project, we start with a task. Each task is a microchasm of the entire project and at HGRAG, not only does this serve to facilitate the team's collaboration across time zones and programming languages. This results in projects which are auditable and have reproducible results; anyone looking at the code can determine exactly how any output from it was produced and anyone working on the task at anytime can pick it up and recreate the same output you wrote. As a scientist, this need for reproducibility resonated with me and even if you are a team of one in your workplace (as many statisticians out there might be) your most important collaborator is you six months from now. Break up your project into discrete tasks and thank yourself later.
 
-For more information on Make files check out Mike Bostock's post here (link) and for the inspiration for HRDAG's project oriented workflow check out Jenny Bryan's post here (link). 
+To make each task even clearer, each task has a Makefile. The Makefile serves as an outline of each task not only for our benefit, but for the computer to read as well. Imagine being able to work on a group project with team members around the world, and still have an auditable trail of each person's work that just works. For more information on Make files check out Mike Bostock's post here (link) and for the inspiration for HRDAG's project oriented workflow check out Jenny Bryan's post here (link). 
 
+For this project I have an import task, a clean task, and a write task each with its own Makefile, input, outout, and src folder for the source code. 
+I start with the import task. In the input folder I include the two files I'd like to examine. These are the two datasets with cases of the potential epidemic. 
+
+The first file includes initial cases reported from 12 June 2019 -- 10 September 2019. The second file contains additional cases reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine whether or not the pattern of these cases suggests an epidemic of #some outcome of interest, using flu as a placeholder# and to do that we will need to examine them using a common epidemiological tool, an epidemiological curve. 
+
+#Would it be better to just make these one file in the clean task or show the initial results as we saw them in two different sets and why we thought we needed more evidence before coming to a conclusion? 
+#I think it's valuable to show that process but it may not be super relevant to the idea of the workflow
 
 ```{r, setup, message=FALSE}
 
 pacman::p_load("dplyr", "styler", "tidyverse", "tidytext", "lubridate", "tinytex", "here", "readr", "janitor", "incidence", "epitools", "assertthat", "DataExplorer")
               
 # all paths in one place, make this a function
-files <- list(fludata1 = here: here("blog/processpost/import/flu_data_1_122219.csv"), fludata2 = here: here("blog/processpost/import/flu_data_2_122219.csv")
-)
+files <- list(fludata1 = here: here("clean/import/flu_data_1_122219.csv"), 
+              fludata2 = here: here("clean/import/flu_data_2_122219.csv"), 
+              cleanflu1 = here: here: here("clean/output/flu1.csv"),
+              cleanflu2 = here: here: here("clean/output/flu2.csv"))
 #test
 stopifnot(is.list(files)== TRUE)
 
-flu1 <- readr::read_delim(files$fludata1, delim=",")
+flu1 <- readr::read_delim(files$cleanflu1, delim=",")
 stopifnot(nrow(flu1) == 109) #break it first, 107 breaks it
 
 
-flu2 <- readr::read_delim(files$fludata2, delim=",")
-stopifnot(nrow(flu1) == 975) #break it first, 150 breaks it
+flu2 <- readr::read_delim(files$cleanflu2, delim=",")
+stopifnot(nrow(flu1) == 975) #break it first, 900 breaks it
 
 ```
 
-## Import and Clean data {-}
+## Clean data {-}
 
 In order to make this data usable I have set all of the values of each variable which are either empty, only contain a period, or contain NA all as missing. I have also removed the Venue and Family_name columns as they are formatted in Written Chinese and I am not familiar with libraries which parse this type of data though I would be very glad to learn of any. I have also formatted the variables in such a way as to be most usable later on. The date information is set as Year--Month--Day, Age is set as numeric, Time is a factor and Living_condition and Remarks are characters.
 
