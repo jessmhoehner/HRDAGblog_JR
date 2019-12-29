@@ -1,0 +1,220 @@
+---
+title: 'From Scripts to Projects: Using a Modular, Auditable, and Reproducible Workflow to Investigate a Potential Epidemic'
+author: "Jessica Randall"
+date: "12/22/2019"
+output:
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    toc: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction {-}
+
+Having been a big fan of HRDAG's work and fellow alumna of Emory's Rollin's School of Public Health, I have been delighted to have had opportunities to chat with both Megan and Patrick over the last year. I was equally thrilled when Patrick asked if I might want to work on an epidemiological problem the team had been presented with. While I had read about the organization's modular workflow (link) and watched Patrick's talk on how to do principled data processing (link), a lot of it was initially beyond my scope as someone who had only formally learned SAS and dabbled in self-taught Python and R. I fully admit to my R code looking suspiciously similar to all of the examples of amateur coding that Tarak uses in his post on why .Rproj is harmful to reproducible and auditable data science (link). 
+
+Excited to help out where I could and learn from someone I consider a programming maestro, I was undettered by the prospect of a crash course in the HRDAG process necessitated by the inherent immediacy of the need for an answer; were the data suggestive of an epidemic or not? To that end and with a great deal of Patrick's guidance I began to learn Vim, shift towards working mainly in the command line as opposed to R Studio, and start thinking of scripts in terms of a larger project architecture as opposed to one-off bits of code that I'd write per project. 
+
+As I worked, Patrick also encouraged me to keep notes on what I liked and disliked about the process, where I felt it made things easier and where I noticed friction. The following post summarizes those notes and the work that went into determining the answers to the client's question. 
+
+## Setup {-}
+
+To begin the project, we start with a Makefile. The Makefile provides an outline of our work not only for us to read but for the computer to read as well. With Makefileshow we transform any spreadsheets we pu
+
+For more information on Make files check out Mike Bostock's post here (link) and for the inspiration for HRDAG's project oriented workflow check out Jenny Bryan's post here (link). 
+
+
+```{r, setup, message=FALSE}
+
+pacman::p_load("dplyr", "styler", "tidyverse", "tidytext", "lubridate", "tinytex", "here", "readr", "janitor", "incidence", "epitools", "assertthat", "DataExplorer")
+              
+# all paths in one place, make this a function
+files <- list(fludata1 = here: here("blog/processpost/import/flu_data_1_122219.csv"), fludata2 = here: here("blog/processpost/import/flu_data_2_122219.csv")
+)
+#test
+stopifnot(is.list(files)== TRUE)
+
+flu1 <- readr::read_delim(files$fludata1, delim=",")
+stopifnot(nrow(flu1) == 109) #break it first, 107 breaks it
+
+
+flu2 <- readr::read_delim(files$fludata2, delim=",")
+stopifnot(nrow(flu1) == 975) #break it first, 150 breaks it
+
+```
+
+## Import and Clean data {-}
+
+In order to make this data usable I have set all of the values of each variable which are either empty, only contain a period, or contain NA all as missing. I have also removed the Venue and Family_name columns as they are formatted in Written Chinese and I am not familiar with libraries which parse this type of data though I would be very glad to learn of any. I have also formatted the variables in such a way as to be most usable later on. The date information is set as Year--Month--Day, Age is set as numeric, Time is a factor and Living_condition and Remarks are characters.
+
+```{r readinput, echo=FALSE,}
+
+```
+
+
+## Summarize variables {-}
+
+```{r summarize_vars, message=FALSE, echo=FALSE}
+plot_missing(clean_data)
+summary(clean_data, na.rm=FALSE)
+head(clean_data)
+```
+
+There are `r nrow(clean_data)` rows indicating individual deaths and `r ncol(clean_data)` columns indicating information about the individual and circumstances surrounding their deaths. There are `r table(clean_data$sex)[['F']]` Females and `r table(clean_data$sex)[['M']]` Males in this clean_data set with an overall mean age of `r round(mean(clean_data$age, na.rm=T), 0)` and a median age of `r quantile(clean_data$age, probs=c(0.5), na.rm=TRUE)[[1]]`. The youngest reported individual is `r min(clean_data$age, na.rm=T)` and the oldest reported individual is reported as `r max(clean_data$age, na.rm=T)`, with `r sum(is.na(clean_data$age))` individuals without age data.
+
+The date with the greatest frequency of reported deaths `r mode(clean_data$DOD)` deaths was 7 September 2019, followed by 5 deaths reported on 5 September and 4 deaths each reported on both 6 September and 15 June 2019. The most frequent reported time of death was `r mode(clean_data$TOD)`, with `r mode(clean_data$TOD)` individuals being reported dead at this time and 5 individuals each reported dead at the hours of 5:00 AM, 7:00 AM and 12:00 AM.
+
+The Area with the highest frequency of deaths is reported to be `r mode(clean_data$area)` (8 individuals) followed by 7 individuals reported dead in Wong Tai Sin and 6 individuals each reported dead in Kwun Tong and Shatin.
+
+`r mode(clean_data$incident_type["Fall from bldg"])` individuals were reported as having fallen from a building with the second most frequent incident type listed as "hanging". `r table(clean_data$suicide_note_found['N'])` individuals were reported to have not left a suicide note, `r table(clean_data$suicide_note_found['Y'])` were reported to have left a suicide note and `r table(clean_data$suicide_note_found['NA'])` individuals do not have information for this variable.
+
+## Regarding Remarks {-}
+
+`r table(clean_data$remarks["Identity unknown"])` individuals are listed as "Identity Unknown", four of whom are also reported as Male and three of whom are reported as Female. `r table(clean_data$remarks["Death as protest against HK govt"])` individuals are listed as "Death as protest against HK govt". `r table(clean_data$remarks["Not dead."])`individuals are listed as not dead.
+
+Below are selected remarks of those highlighted by the Facebook poster as having been under suspicious circumstances.
+
+- an individual whose family member said all was normal when he left the house 4 hours before the reported death of (presumably) his son
+
+- three individuals in five days whose deaths were reported as protests against the Hong Kong Government
+
+- an individual reported dead was remarked to have been worried about his academic performance in mid--August, even though grades had been out for a long time
+
+- a 13 year old individual reported as "passed away" but a spokeperson for a reportedly pro--government national news outlet denied the individual was 13, denied any connection with protest, and refused to provide a reason for this death
+
+- an individual reported by police to have been a loner and had love problems
+
+- an individual found with their hands and body tied to a bag containing 4 bricks
+
+- an individual initially reported as a dead 10 year old boy but later reported as a living 18 year old boy
+
+- an individual who was a student at Hungkuang Univeristy in Taiwan and was reported to have killed himself at the Hong Kong Polytechnic University in Hong Kong.
+
+## Histogram of Age of Individuals {-}
+
+First, noting that there are three individuals who are referenced in the remarks as not truly being dead. I removed these from the data set, bringing the number of deaths down to `r nrow(clean_data)`. Next, I have graphed a histogram of all deaths with the frequencies specified at the top of each bar.
+
+```{r drop_nonsuicides, fig.height=4, fig.width=6, message=FALSE, echo=FALSE}
+#remove individuals who listed as not dead per the remarks
+clean_data<-clean_data[grep("Not dead", clean_data$remarks, invert=TRUE), ]
+assert_that(nrow(clean_data)== 105)
+
+agehisto<-clean_data %>%
+  ggplot(aes(x=clean_data$age, is.na=FALSE)) +
+  geom_histogram( binwidth=6, fill="Black", color="White", alpha=0.7)+   ggtitle("Histogram of Age, bin size=6")+
+  theme_bw()
+
+agehisto
+
+```
+
+Age appears to be bimodally distributed with the highest frequency of deaths reported in individuals between the ages of `r mode(data$agegrp)` and the second highest frequency of deaths occurring in individuals between the ages of 50--60 years old. With `r sum(is.na(data$age))` individuals missing data for Age, it may be useful to run the analysis with and without imputing those missing values. No data were imputed for this analysis.
+
+## Daily Epidemic Curve (All Reported Deaths) {-}
+
+In order to examine the frequency of reported deaths per day across the time period provided, I use the EpiCurve function to specify the dates, counts of the event of interest and the period at which I would like to see each bar. Here
+
+```{r epic_DOD, message=FALSE, echo=FALSE}
+clean_data$DOD<- as.Date(clean_data$DOD)
+assert_that(is.Date(clean_data$DOD))
+
+# compute daily incidence
+date_death<- incidence(clean_data$DOD, interval = 1 )
+
+epiplot<-
+  plot(date_death, border = "white", show_cases=TRUE, 
+       ylab = "Reported Deaths", xlab= "Date") +
+  theme_grey() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
+  coord_fixed(ratio=2)
+
+epiplot
+
+DODarray<-as.array(clean_data$DOD, na.rm=FALSE)
+table(DODarray)
+
+ggsave("epic_DOD.png", plot=last_plot(), dpi= 600)
+```
+
+This graph supports the finding from
+"雲吞博士的語言藝術 Vinton's Art of Language" Facebook post on 17 September 2019 which suggest an increase in deaths beginning in mid--August. Each vertical bar represents a single day that deaths were reported. Each smaller square represents a single individual.
+
+
+The most deaths were recorded in weeks `r date_death$weeks["2019-W25"]` and `r date_death$weeks["2019-W36"]`.
+
+there were 33 recorded deaths, an average of 1.5 deaths recorded per day. It is notable that 3 of the deaths reported during this period have remarks indicating that the death was in protest of the Hong Kong government and this remark does not appear associated with another reported death until early September. Two of these three individuals reportedly left suicide notes. Another 3 of the recorded deaths during this time period have remarks indicating "Identity unknown" and this period also includes the data set's only instance of two deaths, a husband and wife, reported as paired.
+
+Between 12 July--11 August, there were 20 reported deaths, also an average of 1.5 deaths recorded per day. It is notable during this period that 3 reported deaths also have remarks indicating "Identity unknown", and 6 individuals reportedly left suicide notes.
+
+In the month between 12 August--10 September, there were 53 deaths recorded with an average of 1.92 deaths recorded per day. With the exception of three days out of the month there was a minimum of 1 death/day and maximum of 6 deaths/day recorded. This is an increase of approximately 50% more deaths per day in this month as compared to each of the preceding two months. It is notable that one individual was remarked as having an unknown identity and another individual reportedly died in protest of the Hong Kong Government. 14 individuals reported dead during this period left suicide notes.
+
+## Epidemic Curve of Individuals Between the Ages of 20--30 {-}
+
+In order to examine the frequency of reported deaths per day for people between the Ages of 20--30 across the time period provided, I specify the dates, counts of the event of interest, how many deaths were reported as having been an individual between the ages of 20--30, and again I have specified one bar for each day.
+
+```{r epic_dod_20_30, message=FALSE}
+date_deathage<- incidence(clean_data$DOD, interval = 1, group= clean_data$agegrp)
+
+epiplot_age<-
+  plot(date_deathage, aes((agegrp)), border="white", show_cases=TRUE,
+       ylab = "Reported Deaths") +
+  theme_grey() +
+  theme(legend.position = "bottom") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "Black")) + 
+  coord_fixed(ratio=2.5)
+
+epiplot_age
+
+ggsave("epic_dod_20_30.png", plot=last_plot(), dpi= 600)
+```
+
+This graph support the findings from
+"雲吞博士的語言藝術 Vinton's Art of Language" Facebook post on 17 September 2019 which suggest an increase in deaths among individuals between the ages of 20--30 in August. Bars colored Red indicate that no individuals between the ages of 20--30 were reported dead on that day. Blue bars indicate that one of the individuals reported dead that day were between the ages of 20--30 and green bars indicate that two individuals reported dead on that day were between the ages of 20--30.
+
+Of the 33 reported deaths between 12 June--11 July, 4 deaths (12%) were in individuals between the ages of 20--30. The mean age of individuals reported dead during this time was close to the overall mean age for all time periods at 47.5 years of age. Notably, there are 4 individuals reported dead during this time period who are missing data for age. This is approximately half of the 7 total people missing age data.
+
+Of the 20 deaths reported between July 11th to August 10th, 8 deaths (40%) were in individuals between the ages of 20--30. This is an increase of deaths by 28%/month in reported deaths among people in this age group. The mean age of individuals reported dead during this time period was 40 years old, a decrease of 7.5 years compared to the overall mean age. There are two individuals reported dead during this time period with missing age data.
+
+Of the 53 reported deaths between 12 August--10 September, 14 deaths (26%) were reported in individuals between the ages of 20--30. This is a 14% reduction from the previous month but still just over double the percentage of the deaths in this age group from 12 June--11 July. The mean age of individuals reported dead during this time period was 49 years old, an increase of 2 years compared to the overall mean age and an increase of 9 years compared to the deaths reported in the preceding month. There is one individual reported dead during this time period with missing age data.
+
+## Number of Individuals Reported Dead between 5:00--6:00AM {-}
+
+In order to examine the frequency of reported deaths per day reported between the hours of 5--6 AM across the time period provided, I specify the dates, counts of the event of interest, how many deaths were reported between the hours of 5--6 AM, and again I have specified one bar for each day.
+
+```{r epic_dod_hr5_6, message=FALSE}
+hours<-as.hour(clean_data$TOD, mind="1899-12-31 01:00:00", "1899-12-31 12:00:00")
+clean_data$hours<-hours$hour12
+
+date_deathhrs<- incidence(clean_data$DOD, interval = 1, group= clean_data$hours)
+
+epiplot_hrs<-
+  plot(date_deathhrs, col_pal= incidence_pal1_dark, border="white", show_cases=TRUE,        ylab = "Reported Deaths") +
+  theme_grey() + 
+  theme(legend.position = "bottom") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "Black")) + 
+  coord_fixed(ratio=2)
+
+epiplot_hrs
+
+ggsave("epic_dod_hr5_6.png", plot=last_plot(), dpi= 600)
+```
+
+This graph supports the findings from
+"雲吞博士的語言藝術 Vinton's Art of Language" Facebook post on 17 September 2019 which suggest that the timing of when individual deaths were reported is unusual since most people would be in bed. Bars colored Red indicate that no individuals were reported dead between the hours of 5--6 AM. Blue bars indicate that one of the individuals reported dead that day was found between the hours of 5--6 AM, purple bars indicate that two individuals reported dead that day were found between the hours of 5--6 AM, and green bars indicate that three people found dead that day were found between the hours of 5--6 AM.
+
+Of the 33 reported deaths between 12 June--10 July, 11 deaths (33%) were reported between 5--6 AM. In line with the overall mode, most deaths reported in this month were reported between 5--6 AM.
+
+Of the 20 deaths reported between 11 July--10 August, 7 deaths (35%) were reported between 5--6 AM. Close to the overall mode, the majority of reported deaths during this month were reported at 5 am.
+
+Of the 52 reported deaths between 12 August--10 September, 6 deaths reported (12%) were reported between 5--6 AM. This is a 23% reduction from the previous month. Unlike the most commonly reported time deaths were reported overall, most deaths reported during this time period were either at 7am (6 deaths reported), 12pm (6 deaths reported), 6AM alone (4 deaths reported), or 9AM (4 deaths reported). There is also one individual reported dead during this time period for whom time of report is missing.
+
+## Conclusion {-}
+
+Analysis of the data provided on reported deaths from 12 June 2019--10 September 2019 support the observations made by the Facebook poster "雲吞博士的語言藝術 Vinton's Art of Language" on 17 September 2019. First, an increase in reported deaths overall appears to begins in mid--August 2019. Second, of those reported dead, a spike in reported deaths among individuals between the ages of 20--30 is observed between 11 July--12 August. Finally, analysis suggests that prior to mid--August, approximately 34% of deaths reported were done so between the hours of 5:00--6:00 AM. After mid--August, the percentage of deaths reported between 5:00--6:00 AM out of all deaths reported drops by approximately 2/3 even though more deaths were reported during this time period as compared to the preceding two months. Supporting the conclusions of the original poster, deaths in Hong Kong, especially those reported as suicide, seem to have patterns which could be related to other incidents surrounding the protests and these patterns suggest the need for deeper investigation.
+
+```{r session_info, message=FALSE, include=FALSE}
+sessionInfo()
+```
+<!---- done ---->
