@@ -1,29 +1,35 @@
-# -*- coding: utf-8 -*-
-#
-# Author: PB
-# Maintainer(s): PB
 # License: (c) HRDAG 2019, GPL v2 or newer
 #
-# CN-HK-suicides/import/Makefile
 # -----------------------------------------------------------
+#HRDAGblog_JR/import/src/import.R
 #
-.PHONY: all clean
 
-all: output/flu_clean.csv
+require(pacman)
+p_load(readxl, readr, janitor, dplyr)
+require(here)
 
-clean:
-	src/clean_flu.R
-	input/cides_flu.csv
-Rscript --vanilla $<
-	
+#do we really need an output folder in the import task for this project?
+#could we import the data in this task, call it from the clean task and output it in clean/output for use
+#in the rest of the project?
 
-output/fludata1.csv:\
-		src/import.R \
-		input/flu_data_1_122219.csv
-	Rscript --vanilla $<
-output/flu_clean2.csv:\
-		src/import.R \
-		input/flu_data_2_122219.csv
-	Rscript --vanilla $<
+getargs <- function() {
+	list(
+		 input1 = here("import/input/flu_data_1_122219.txt"),
+		 output1 = here("import/output/flu1.txt"),
+		 input2 = here("import/input/flu_data_2_122219.txt"),
+		 output2 = here("import/output/flu2.txt"),)
+}
+
+main <- function() {
+    args <- getargs()
+	read_excel(args$input1) %>%
+		clean_names() %>%
+		write_delim(args$output, delim="|")
+}
+
+#will the read_excel function change since these are txt files now?
+#how would I modify this code to import two files?
+
+main()
 
 # done.
