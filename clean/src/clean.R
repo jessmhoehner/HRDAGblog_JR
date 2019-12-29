@@ -14,8 +14,8 @@ require(here, assertr)
 
 files <- list(input1=here::here("clean/input/flu_data_1_122219.txt"),
               input2=here::here("clean/input/flu_data_2_122219.txt"),
-              output1=here::here("clean/output/flu1_clean.rds"),
-              output2=here::here("clean/output/flu2_clean.rds"))
+              output1=here::here("clean/output/flu1_clean.txt"),
+              output2=here::here("clean/output/flu2_clean.txt"))
 stopifnot(is.list(files)== TRUE)
 
 #why did we want these in rds files?
@@ -25,7 +25,7 @@ flu1 <- readr::read_delim(files$input1, delim="|") %>%
   clean_names() %>%
   mutate(age = as.integer(age)) %>%
   mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,sex, status), as.factor) %>%
+  mutate_at(vars(DOD,sex,status), as.factor) %>%
 write_delim(files$output1, delim="|", na= "NA")
 stopifnot(ncol(flu1) == 6 & (nrow (flu1) == 108))
 
@@ -33,7 +33,7 @@ flu2 <- readr::read_delim(files$input2, delim="|") %>%
   clean_names() %>%
   mutate(age = as.integer(age)) %>%
   mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,sex, status), as.factor) %>%
+  mutate_at(vars(DOD,sex,status), as.factor) %>%
 write_delim(files$output2, delim="|", na= "NA")
 stopifnot(ncol(flu2) == 6 & (nrow (flu2) == 974))
 
