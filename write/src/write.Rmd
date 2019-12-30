@@ -27,7 +27,7 @@ To make the goals of each task even clearer, each task has a Makefile. The Makef
 
 For this project I have a clean task, a test task, and a write task each with its own Makefile, input, output, and src folder for the source code. 
 
-## Clean {-}
+## Clean and Summarize {-}
 
 I start with the clean task. In the input folder of this task I include the two datasets of with reported deaths, the src folder contains the R code to clean up the code. I used RStudio to test the code for bugs (with frequent restarts and fresh environments) and use Microsoft Visual Studio Code to update the code that gets pushed to the project Github repository. I had a small bug early on with an error message I didn't want to immediately address so I created an issue on the GitHub to pick it back up later. I knew where the code had issues but I could count on the rest of it working as expected if (when) I'd need to spend time on other projects. This also had the added benefit (trap?) of making me feel like I'd actually made progress instead of staring down the endless empty field of .R file with however many tasks left to code. Win!
 
@@ -35,81 +35,43 @@ The first dataset includes initial deaths reported from 12 June 2019 -- 10 Septe
 
 First, we'd like to do some exploratory data analysis and summarize how much complete information we have for each individual reported on in the dataset.
 
-To do this, we pull in the clean data from the clean task's output folder and examine mising data using the DataExplorer package. At HRDAG, everybody counts, and since we assume that the data we are presented with is incomplete, we'd like to get an idea of where exactly information is not recorded.
+To do this, we pull in the clean data from the clean task's output folder. #FIXME: add in more detail about steps in clean task
 
-```{r, clean, message=FALSE}
+```{r, cleanand sum, message=FALSE}
 require (pacman)
-pacman::p_load(dplyr,styler,tidyverse,
-               forcats,readr,janitor,
-               assertr, ggplot2, lubridate,
-               scales, DataExplorer, incidence,
-               exactci)
+pacman::p_load(dplyr,styler,tidyverse,readr,assertr, ggplot2,scales,incidence,exactci)
 
-files <- list(input1=here::here("clean/input/death_data_1_122219.txt"),
-              input2=here::here("clean/input/death_data_2_122219.txt"),
-              output1=here::here("clean/output/death1_clean.txt"),
-              output2=here::here("clean/output/death2_clean.txt"))
+files <- list(input1=here::here("clean/output/death1_clean.txt"),
+               input2=here::here("clean/output/death2_clean.txt"))
 stopifnot(is.list(files)== TRUE)
 
-death1 <- readr::read_delim(files$input1, delim="|") %>%
-  clean_names() %>%
-  mutate(age = as.integer(age)) %>%
-  mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,sex,status), as.factor)
-write_delim(death1, files$output1, delim="|", na= "NA")
-stopifnot(ncol(death1) == 6 & (nrow (death1) == 108))
+death1 <- readr::read_delim(files$input1, delim="|")
 
-death2 <- readr::read_delim(files$input2, delim="|") %>%
-  clean_names() %>%
-  mutate(age = as.integer(age)) %>%
-  mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,sex,status), as.factor)
-write_delim(death2,files$output2, delim="|", na= "NA")
-stopifnot(ncol(death2) == 6 & (nrow (death2) == 974))
-
-plot_missing(death1)
-
-plot_missing(death2)
+death2 <- readr::read_delim(files$input2, delim="|")
 
 ```
-## Summarize variables {-}
 
-We define a function that will allow us to report the most frequently occuring date of report in each of the datasets and call it getmode.
+In order to determine if the number of deaths reported is abnormally high, we use an epidemiological (or epi) curve to see if this number of deaths per day appears to spike anywhere. Epi curves are often used in the investigation into whether an outbreak of an outcome has occured and can even suggest a means of propogation; curves for infections transmitted from person to person have different shapes than curves of diseases transmitted from a water source, for example. 
 
-```{r, summarize, message=FALSE}
+In our data, if an epidemic of deaths were occuring, we would expect to see a spike in the number of deaths reported per day. The day on which most deaths were reported in the first set was `r getmode(death1$DOD)` and in the second set was `r getmode(death2$DOD)`. It is unclear whether or not these would be high enough to be considered spikes.
 
-getmode <- function(v) {
-  uniqv <- unique(v)
-  uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-
-```
-#should this be its own task where we create and call the summary information from tables?
-
-In order to determine if the number of deaths reported is abnormally high, we use an epidemiological (or epi) curve to see if this number of deaths per day appears to spike anywhere. Epi curves are often used in the investigation into whether an outbreak of an outcome has occured and can even suggest a means of propogation; curves for infections transmitted from person to person have different shapes than curves of diseases transmitted from a water source, for example. In our data, if an epidemic of deaths were occuring, we would expect to see a spike in the number of deaths reported per day. The day on which most deaths were reported in the first set was `r getmode(death1$DOD)` and in the second set was `r getmode(death2$DOD)`. It is unclear whether or not these would be high enough to be considered spikes.
-
-It looks like we have some people recorded who are not deaths, since we are only interested in the number of deaths over time, we will remove all rows where the person's status is "Not_death". For the first set we'll be removing `r table(death1$status)[["Not_death"]]` people and in the second set we'll be removing `r table(death2$status)[["Not_death"]]` people.
+It looks like we have some people recorded who are not deaths, since we are only interested in the number of deaths over time, we remove all rows where the person's status is "Not_death". For the first set we'll be removing `r table(death1$status)[["Not_death"]]` people and in the second set we'll be removing `r table(death2$status)[["Not_death"]]` people. ##FIXME: discuss in past tense
 
 In the first set there are `r table(death1$sex)[["F"]]` Females and `r table(death1$sex)[["M"]]` Males with overall mean age of `r round(mean(death1$age, na.rm=T), 0)` and a median age of `r quantile(death1$age, probs=c(0.5), na.rm=TRUE)[[1]]`. In the second set there are `r table(death2$sex)[["F"]]` Females and `r table(death2$sex)[["M"]]` Males with overall mean age of `r round(mean(death2$age, na.rm=T), 0)` and a median age of `r quantile(death2$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
 
 Fortunately there appears to be very little missing data in the dates, this will be critical in setting up our epi curves.
 
 ## Daily Epi Curve (All Reported Deaths) From 1st Dataset {-}
+
 The first set includes initial deaths reported from 12 June 2019 -- 10 September 2019, 91 days or approximately 3 months. The second set contains additional deaths reported from 1 January 2019 -- 14 December 2019, 348 days or approximately 11 months.
 
 In order to examine the frequency of reported deaths per day across the time period provided, I use the incidence package to obtain the number of deaths reported each day and plot this against all of the days for which we have data.
 
 ```{r epic_DOD1, message=FALSE, echo=FALSE}
-#retain only people reported as dead
-death1 <- filter(death1, status == "dead")
-
-#format date of death to a date
-death1$DOD<- as.Date(death1$DOD)
-
 # compute daily incidence
-date_case1<- incidence(death1$DOD, interval = 1 )
+date_case1<- incidence(death1$date, interval = 1 )
 
-#plot 
+# plot 
 epiplot1<-
   plot(date_case1, border = "black", show_cases =TRUE, 
        ylab = "Reported Deaths", xlab= "Date") +
@@ -127,16 +89,10 @@ Let's examine the 2nd set of data with around 900 people, first removing those p
 ## Daily Epi Curve (All Reported Deaths) From 2nd Dataset {-}
 
 ```{r epic_DOD2, message=FALSE, echo=FALSE}
-#retain only people reported as dead
-death2 <- filter(death2, status == "dead")
-
-#format date of death to a date
-death2$DOD<- as.Date(death2$DOD)
-stopifnot(is.Date(death2$DOD))
-
 # compute daily incidence
-date_case2<- incidence(death2$DOD, interval = 1 )
+date_case2<- incidence(death2$date, interval = 1 )
 
+# plot
 epiplot2<-
   plot(date_case2, border = "black", show_cases=TRUE, 
        ylab = "Reported Deaths", xlab= "Date") +
@@ -153,44 +109,24 @@ As is common with data in the human rights context, it can often be difficult to
 
 These deaths are counts collected in a specific time period.This means that they can be assessed in the context of whether or not the represent a normally distributed discrete random variable in a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation around the mean number of events in a given time period. 
 
-In order to establish whether or not these data suggest spikes in numbers of deaths reported in a given day we construct our hypothesis to ask: given the mean number of deaths reported per day, are the days on which we are seeing more deaths within the expected variation around the observed mean? Specifically, on the days when we are seeing what appear to be a high number of deaths per day, are these numbers statistically significantly greater than we would expect with normal variation? 
+In order to establish whether or not these data suggest spikes in numbers around events of interest to the client we construct our hypothesis to ask: given the mean number of deaths reported per day prior to the date of interest, is the mean number of deaths per day significantly different after this date? Specifically, on the days when we are seeing what appear to be a high number of deaths per day, are these numbers statistically significantly greater than we would expect with normal variation? 
 
-For this we first need to account for the days on which we do not have any reported deaths by adding these dates back in with counts of zero.
-#working on this
+## Hypothesis testing
 
-Next, we need to obtain the number of deaths occuring on each day or the frequency of deaths/day.
+For this we first need to account for the days on which we do not have any reported deaths by adding these dates back in.
 
-Fianlly, in order to test our hypothesis we use the stat's package's ppois function to test the likliehood that the frequency of deaths we are observing is within the range of expected variation. Since we want to know specifically if the frequency of deaths we are observing is greater than the expected number of deaths we perform a one-tailed test. 
+Next, we need to obtain the mean frequency of deaths per day before and after the dates of events of interest. 
+
+Finally, in order to test our hypothesis we use the stat's package's ppois function to test the likliehood that the frequency of deaths we are observing is within the range of expected variation. Since we want to know specifically if the frequency of deaths we are observing is greater than the expected number of deaths we perform a one-tailed test. 
 
 For example, if the mean number of deaths reported per day is 4 and we're seeing days with 7 deaths reported per day, what is the likelihood of having days with 7 or more deaths reported per day?  
 
-## Hypothesis testing
 ``` {r hypothesistest, message = FALSE}
-#add in counts of zero for days on which no deaths were reported
-death1 %>%
-complete(DOD = seq.Date(min(DOD), max(DOD), by="day")) %>%
-  fill('Status`)
-
-#set1
-#mean number of deaths/day
-counts1 <- count(death1, death1$DOD)
-mucpd1 <- mean(counts1$n)
-
-#max number of deaths/day
-maxdeath1 <-max(counts1$n)
-
-#mean number of deaths /day in set 2 
-counts2 <- count(death2, death2$DOD)
-mucpd2 <- mean(counts2$n)
-
-#max number of deaths/day
-maxdeath2 <-max(counts2$n)
-
-#set 1
+#test 1
 100*ppois(maxdeath1, mucpd1, lower.tail=FALSE)
 poisson.test(round(mucpd1), 1, round(maxdeath1), alternative = "g")
 
-#set2
+#test 2
 100*ppois(maxdeath2, mucpd2, lower.tail=FALSE)
 poisson.test(round(mucpd2), 1, round(maxdeath2), alternative = "g")
 
