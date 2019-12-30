@@ -17,24 +17,23 @@ Having been a big fan of HRDAG's work and fellow alumna of Emory's Rollin's Scho
 
 Excited to help out where I could and learn from a master, I was undettered by the prospect of a crash course in the HRDAG process necessitated by the inherent immediacy of the need for an answer; were the data suggestive of an epidemic or not? To that end and with a great deal of Patrick's guidance I began to shift towards working mainly in the command line as opposed to R Studio and to start thinking of scripts in terms of a larger project architecture as opposed to one-off bits of code that I'd write per project. 
 
-As I worked, Patrick also encouraged me to keep notes on what I liked and disliked about the process, where I felt it made things easier and where I noticed friction. The following post summarizes those notes and the work that went into determining the answers to the client's question. 
+As I worked, Patrick also encouraged me to keep notes on what I liked and disliked about the process, where I felt it made things easier and where I noticed friction. The following post summarizes those notes and the work that went into determining the answers to the client's question.
 
 ## Setup {-}
 
-To begin the project, we start with a task. Each task is a microchasm of the entire project and at HGRAG, not only does this serve to facilitate the team's collaboration across time zones and programming languages. This results in projects which are auditable and have reproducible results; anyone looking at the code can determine exactly how any output from it was produced and anyone working on the task at anytime can pick it up and recreate the same output you wrote. As a scientist, this need for reproducibility resonated with me and even if you are a team of one in your workplace (as many statisticians out there might be) your most important collaborator is you six months from now. Break up your project into discrete tasks and thank yourself later.
+To begin the project, we start with a task. Each task is a microchasm of the entire project and at HGRAG, not only does this serve to facilitate the team's collaboration across time zones and programming languages. This results in projects which are auditable and have reproducible results; anyone looking at the code can determine exactly how any output from it was produced and anyone working on the task at anytime can pick it up and recreate the same output you wrote. As a scientist, this need for reproducibility resonated with me and even if you are a team of one in your workplace (as many statisticians reading this might be) your closest collaborator is you six months from now. Break up your project into discrete tasks and thank yourself later. I plan to implement this style of project organization even at my work outside of HRDAG.
 
-To make each task even clearer, each task has a Makefile. The Makefile serves as an outline of each task not only for our benefit, but for the computer to read as well. Imagine being able to work on a group project with team members around the world, and still have an auditable trail of each person's work that just works. For more information on Make files check out Mike Bostock's post here (link) and for the inspiration for HRDAG's project oriented workflow check out Jenny Bryan's post here (link). 
+To make the goals of each task even clearer, each task has a Makefile. The Makefile serves as an outline of each task not only for our benefit, but mainly for the computer to read it. Imagine being able to work on a group project with team members around the world, and still have an auditable trail of each person's work. The Makefile makes that scaffolding clear and traceable. For more information on Make files check out Mike Bostock's post here (link) and for the inspiration for HRDAG's project oriented workflow check out Jenny Bryan's post here (link). 
 
 For this project I have a clean task, a test task, and a write task each with its own Makefile, input, output, and src folder for the source code. 
 
 ## Clean {-}
 
-I started with the clean task. In the input folder of this task I include the two datasets of cases of the potential epidemic, the src folder contains the R code to clean up the names of the variables. I used RStudio to test the code for bugs (with frequent restarts and fresh environments) and use Visual Studio Code to update the code that gets pushed to the project Github repository. I had a small bug early on with an error message I didn't want to immediately address so I created an issue on the GitHub to pick it back up later. I knew where the code had issues but I could count on the rest of it working as expected if (when) I'd need to spend time on other projects. This also had the added benefit (trap?) of making me feel like I'd actually made progress instead of staring down the endless empty field of .R file with however many tasks left to code. Win!
+I start with the clean task. In the input folder of this task I include the two datasets of with reported deaths, the src folder contains the R code to clean up the code. I used RStudio to test the code for bugs (with frequent restarts and fresh environments) and use Microsoft Visual Studio Code to update the code that gets pushed to the project Github repository. I had a small bug early on with an error message I didn't want to immediately address so I created an issue on the GitHub to pick it back up later. I knew where the code had issues but I could count on the rest of it working as expected if (when) I'd need to spend time on other projects. This also had the added benefit (trap?) of making me feel like I'd actually made progress instead of staring down the endless empty field of .R file with however many tasks left to code. Win!
 
-#Would it be better to just make these one file in the clean task or show the initial results as we saw them in two different sets and why we thought we needed more evidence before coming to a conclusion? 
-#I think it's valuable to show that process but it may not be super relevant to the idea of the workflow
+The first dataset includes initial deaths reported from 12 June 2019 -- 10 September 2019. The second file contains additional deaths reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine if the number of deaths reported during a specific time period appeared to be unusually high, and the relationship of these reported detahs to dates of external events. 
 
-The first file includes initial cases reported from 12 June 2019 -- 10 September 2019. The second file contains additional cases reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine whether or not the pattern of these cases suggests an epidemic of #some outcome of interest, using flu as a placeholder#. First, we'd like to do some exploratory data analysis and summarize how much complete information we have for each individual reported on in the dataset.
+First, we'd like to do some exploratory data analysis and summarize how much complete information we have for each individual reported on in the dataset.
 
 To do this, we pull in the clean data from the clean task's output folder and examine mising data using the DataExplorer package. At HRDAG, everybody counts, and since we assume that the data we are presented with is incomplete, we'd like to get an idea of where exactly information is not recorded.
 
@@ -46,33 +45,31 @@ pacman::p_load(dplyr,styler,tidyverse,
                scales, DataExplorer, incidence,
                exactci)
 
-files <- list(input1=here::here("clean/input/flu_data_1_122219.txt"),
-              input2=here::here("clean/input/flu_data_2_122219.txt"),
-              output1=here::here("clean/output/flu1_clean.txt"),
-              output2=here::here("clean/output/flu2_clean.txt"))
+files <- list(input1=here::here("clean/input/death_data_1_122219.txt"),
+              input2=here::here("clean/input/death_data_2_122219.txt"),
+              output1=here::here("clean/output/death1_clean.txt"),
+              output2=here::here("clean/output/death2_clean.txt"))
 stopifnot(is.list(files)== TRUE)
 
-#want to add in variables which are counts of the number of times each date occurs called cases/day here or do it just before graphing?
-
-flu1 <- readr::read_delim(files$input1, delim="|") %>%
+death1 <- readr::read_delim(files$input1, delim="|") %>%
   clean_names() %>%
   mutate(age = as.integer(age)) %>%
   mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
   mutate_at(vars(DOD,sex,status), as.factor)
-write_delim(flu1, files$output1, delim="|", na= "NA")
-stopifnot(ncol(flu1) == 6 & (nrow (flu1) == 108))
+write_delim(death1, files$output1, delim="|", na= "NA")
+stopifnot(ncol(death1) == 6 & (nrow (death1) == 108))
 
-flu2 <- readr::read_delim(files$input2, delim="|") %>%
+death2 <- readr::read_delim(files$input2, delim="|") %>%
   clean_names() %>%
   mutate(age = as.integer(age)) %>%
   mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
   mutate_at(vars(DOD,sex,status), as.factor)
-write_delim(flu2,files$output2, delim="|", na= "NA")
-stopifnot(ncol(flu2) == 6 & (nrow (flu2) == 974))
+write_delim(death2,files$output2, delim="|", na= "NA")
+stopifnot(ncol(death2) == 6 & (nrow (death2) == 974))
 
-plot_missing(flu1)
+plot_missing(death1)
 
-plot_missing(flu2)
+plot_missing(death2)
 
 ```
 ## Summarize variables {-}
@@ -87,114 +84,118 @@ getmode <- function(v) {
 }
 
 ```
-
 #should this be its own task where we create and call the summary information from tables?
 
-In order to determine if this is an epidemic, we must examine an epidemiological curve to see if this number of cases per day appears to be significantly greater than the average cases reported each day. The day on which most cases were reported in the first set was `r getmode(flu1$DOD)` and in the second set was `r getmode(flu2$DOD)`
+In order to determine if the number of deaths reported is abnormally high, we use an epidemiological (or epi) curve to see if this number of deaths per day appears to spike anywhere. Epi curves are often used in the investigation into whether an outbreak of an outcome has occured and can even suggest a means of propogation; curves for infections transmitted from person to person have different shapes than curves of diseases transmitted from a water source, for example. In our data, if an epidemic of deaths were occuring, we would expect to see a spike in the number of deaths reported per day. The day on which most deaths were reported in the first set was `r getmode(death1$DOD)` and in the second set was `r getmode(death2$DOD)`. It is unclear whether or not these would be high enough to be considered spikes.
 
-It looks like we have some people recorded who are not cases, since we are only interested in the number of cases over time, we will remove all rows where the person's status is "Not_flu". For the first set we'll be removing `r table(flu1$status)[["Not_flu"]]` people and in the second set we'll be removing `r table(flu2$status)[["Not_flu"]]` people.
+It looks like we have some people recorded who are not deaths, since we are only interested in the number of deaths over time, we will remove all rows where the person's status is "Not_death". For the first set we'll be removing `r table(death1$status)[["Not_death"]]` people and in the second set we'll be removing `r table(death2$status)[["Not_death"]]` people.
 
-In the first set there are `r table(flu1$sex)[["F"]]` Females and `r table(flu1$sex)[["M"]]` Males with overall mean age of `r round(mean(flu1$age, na.rm=T), 0)` and a median age of `r quantile(flu1$age, probs=c(0.5), na.rm=TRUE)[[1]]`. In the second set there are `r table(flu2$sex)[["F"]]` Females and `r table(flu2$sex)[["M"]]` Males with overall mean age of `r round(mean(flu2$age, na.rm=T), 0)` and a median age of `r quantile(flu2$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
+In the first set there are `r table(death1$sex)[["F"]]` Females and `r table(death1$sex)[["M"]]` Males with overall mean age of `r round(mean(death1$age, na.rm=T), 0)` and a median age of `r quantile(death1$age, probs=c(0.5), na.rm=TRUE)[[1]]`. In the second set there are `r table(death2$sex)[["F"]]` Females and `r table(death2$sex)[["M"]]` Males with overall mean age of `r round(mean(death2$age, na.rm=T), 0)` and a median age of `r quantile(death2$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
 
-Fortunately there appears to be very little missing data in the dates, this will be critical in setting up our epidemiological curves.
+Fortunately there appears to be very little missing data in the dates, this will be critical in setting up our epi curves.
 
-## Daily Epidemic Curve (All Reported Cases) From 1st Dataset {-}
-The first set includes initial cases reported from 12 June 2019 -- 10 September 2019. The second set contains additional cases reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine whether or not the pattern of these cases suggests an epidemic of #some outcome of interest, using flu as a placeholder# and to do that we will need to examine them using a common epidemiological tool, an epidemiological curve. 
+## Daily Epi Curve (All Reported Deaths) From 1st Dataset {-}
+The first set includes initial deaths reported from 12 June 2019 -- 10 September 2019, 91 days or approximately 3 months. The second set contains additional deaths reported from 1 January 2019 -- 14 December 2019, 348 days or approximately 11 months.
 
-In order to examine the frequency of reported cases per day across the time period provided, I use the incidence package to obtain the number of cases reported each day and plot this against all of the days for which we have data.
+In order to examine the frequency of reported deaths per day across the time period provided, I use the incidence package to obtain the number of deaths reported each day and plot this against all of the days for which we have data.
 
 ```{r epic_DOD1, message=FALSE, echo=FALSE}
-#remove notflu cases
-flu1 <- filter(flu1, status == "flu")
+#retain only people reported as dead
+death1 <- filter(death1, status == "dead")
 
-flu1$DOD<- as.Date(flu1$DOD)
-stopifnot(is.Date(flu1$DOD))
+#format date of death to a date
+death1$DOD<- as.Date(death1$DOD)
 
 # compute daily incidence
-date_case1<- incidence(flu1$DOD, interval = 1 )
+date_case1<- incidence(death1$DOD, interval = 1 )
 
+#plot 
 epiplot1<-
-  plot(date_case1, border = "white", show_cases=TRUE, 
-       ylab = "Reported Cases", xlab= "Date") +
+  plot(date_case1, border = "black", show_cases =TRUE, 
+       ylab = "Reported Deaths", xlab= "Date") +
   scale_x_date(labels = date_format("%d %b %Y")) +
   theme_grey() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
-  coord_fixed(ratio=2)
-
+  coord_fixed(ratio=3)
 epiplot1
+
 ```
-This pattern appears to suggest that cases increased in the beginning of JUne and end of August but since these are only from approximately 100 people, we were unsure as to how to evaluate whether these were outside of what we would expect to see within this population. 
+This pattern appears to suggest that deaths spiked in the beginning of June and end of August into September. However, since these are only from approximately 100 people over 3 months, it is not clear that the days on which we see high numbers of deaths would be outside of what we would expect to see within normal variation in this population. 
 
-Let's examine the 2nd set of data with around 900 people, first removing those people who are not cases, leaving us with nrows(flu2) cases over a period of approximately 1 year. 
+Let's examine the 2nd set of data with around 900 people, first removing those people who are not actually dead, leaving us with nrows(death2) deaths over a period of approximately 11 months. 
 
-## Daily Epidemic Curve (All Reported Cases) From 2nd Dataset {-}
+## Daily Epi Curve (All Reported Deaths) From 2nd Dataset {-}
 
 ```{r epic_DOD2, message=FALSE, echo=FALSE}
-#remove notflu cases
-flu2 <- filter(flu2, status == "flu")
+#retain only people reported as dead
+death2 <- filter(death2, status == "dead")
 
-flu2$DOD<- as.Date(flu2$DOD)
-stopifnot(is.Date(flu2$DOD))
+#format date of death to a date
+death2$DOD<- as.Date(death2$DOD)
+stopifnot(is.Date(death2$DOD))
 
 # compute daily incidence
-date_case2<- incidence(flu2$DOD, interval = 1 )
+date_case2<- incidence(death2$DOD, interval = 1 )
 
 epiplot2<-
-  plot(date_case2, border = "white", show_cases=TRUE, 
-       ylab = "Reported Cases", xlab= "Date") +
+  plot(date_case2, border = "black", show_cases=TRUE, 
+       ylab = "Reported Deaths", xlab= "Date") +
   scale_x_date(labels = date_format("%d %b %Y")) +
   theme_grey() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
-  coord_fixed(ratio=2)
+  coord_fixed(ratio=5)
 
 epiplot2
 ```
-Does this suggest an unusual number of cases at any one point in time? It wasn't immediately clear to us from the picture and we couldn't compare the data to any official statistics.
+This graph suggests that spikes occured in June or July but is 6 deaths reported per day significantly greater than 4 or 5 deaths reported in a day? With more data it appears even less clear if the days which have "high" numbers of deaths are outside of the normal amount of vartiation around the mean that we would expect.
 
-As is common with data in the human rights context, it can often be difficult to obtain official statistics on incidence of a particular outcome of interest. Some group may have an interest in that data not existing in one central location or it may simply never have been collected. Either way, this requires us to break from epidemiological methods and try a classical statistical approach.
+As is common with data in the human rights context, it can often be difficult to obtain official statistics on incidence of a particular outcome of interest. Some group may have an interest in that data not existing in one central location or it may simply never have been collected. Either way, this requires us to try a classical statistical approach.
 
-These cases are counts. This means that they can be assessed in the context of whether or not the represent a normally distributed discrete random variable in a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation. 
+These deaths are counts collected in a specific time period.This means that they can be assessed in the context of whether or not the represent a normally distributed discrete random variable in a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation around the mean number of events in a given time period. 
 
-In order to establish whether or not these data suggest an epidemic we construct our hypothesis to ask: are there more cases occuring than we would expect to see within the expected variation in a Poisson distribution? Specifically, on the days when we are seeing what appear to be a high number of cases per day, are these numbers statistically significantly greater than we would expect with normal variation or not? 
+In order to establish whether or not these data suggest spikes in numbers of deaths reported in a given day we construct our hypothesis to ask: given the mean number of deaths reported per day, are the days on which we are seeing more deaths within the expected variation around the observed mean? Specifically, on the days when we are seeing what appear to be a high number of deaths per day, are these numbers statistically significantly greater than we would expect with normal variation? 
 
-For this we need to account for the days on which we do not have any reported cases by adding these dates back in with counts of zero 
-#how would I do this?
+For this we first need to account for the days on which we do not have any reported deaths by adding these dates back in with counts of zero.
+#working on this
 
-Next, we need to obtain the number of deaths occuring on each day or the frequency of deaths/day
+Next, we need to obtain the number of deaths occuring on each day or the frequency of deaths/day.
 
-In order to test our hypothesis we use the stat's package's ppois function to test the likliehood that the frequency of deaths we are observing is within the range of expected variation. Since we want to know specifically if the frequency of cases we are observing is greater than the expected number of cases we perform a one-tailed test. 
+Fianlly, in order to test our hypothesis we use the stat's package's ppois function to test the likliehood that the frequency of deaths we are observing is within the range of expected variation. Since we want to know specifically if the frequency of deaths we are observing is greater than the expected number of deaths we perform a one-tailed test. 
 
-For example, if the mean number of cases reported per day is 4 and we're seeing days with 7 cases reported per day, what is the probability of having days with 7 or more cases reported per day?  
+For example, if the mean number of deaths reported per day is 4 and we're seeing days with 7 deaths reported per day, what is the likelihood of having days with 7 or more deaths reported per day?  
 
 ## Hypothesis testing
 ``` {r hypothesistest, message = FALSE}
-#add in counts of zero for days on which no cases were reported
+#add in counts of zero for days on which no deaths were reported
+death1 %>%
+complete(DOD = seq.Date(min(DOD), max(DOD), by="day")) %>%
+  fill('Status`)
 
 #set1
-#mean number of cases/day
-counts1 <- count(flu1, flu1$DOD)
+#mean number of deaths/day
+counts1 <- count(death1, death1$DOD)
 mucpd1 <- mean(counts1$n)
 
-#max number of cases/day
-maxflu1 <-max(counts1$n)
+#max number of deaths/day
+maxdeath1 <-max(counts1$n)
 
-#mean number of cases /day in set 2 
-counts2 <- count(flu2, flu2$DOD)
+#mean number of deaths /day in set 2 
+counts2 <- count(death2, death2$DOD)
 mucpd2 <- mean(counts2$n)
 
-#max number of cases/day
-maxflu2 <-max(counts2$n)
+#max number of deaths/day
+maxdeath2 <-max(counts2$n)
 
 #set 1
-100*ppois(maxflu1, mucpd1, lower.tail=FALSE)
-poisson.test(round(mucpd1), 1, round(maxflu1), alternative = "g")
+100*ppois(maxdeath1, mucpd1, lower.tail=FALSE)
+poisson.test(round(mucpd1), 1, round(maxdeath1), alternative = "g")
 
 #set2
-100*ppois(maxflu2, mucpd2, lower.tail=FALSE)
-poisson.test(round(mucpd2), 1, round(maxflu2), alternative = "g")
+100*ppois(maxdeath2, mucpd2, lower.tail=FALSE)
+poisson.test(round(mucpd2), 1, round(maxdeath2), alternative = "g")
 
 ```
-Given the mean number of cases reported per day in set one, `r mucpd1`, and the highest number of cases we see in set 1, `r maxflu1`   
+Given the mean number of deaths reported per day in set one, `r mucpd1`, and the highest number of deaths we see in set 1, `r maxdeath1`   
 
 
 
