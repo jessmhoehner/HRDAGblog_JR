@@ -20,19 +20,27 @@ stopifnot(is.list(files)== TRUE)
 #why did we want these in rds files?
 #want to add in variables which are counts of the number of times each date occurs called cases/day here or do it just before graphing?
 
+#set boundaries for dates of interest 
+dt_boundary_01 <- as.Date("2019-08-01")
+dt_boundary_21 <- as.Date("2019-08-21")
+
 death1 <- readr::read_delim(files$input1, delim="|") %>%
   clean_names() %>%
   mutate(age = as.integer(age)) %>%
-  mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,sex,status), as.factor) %>%
-write_delim(files$output1, delim="|", na= "NA")
-stopifnot(ncol(death1) == 6 & (nrow (death1) == 108))
+  mutate(DOD = as.Date(`date`, "%Y/%m/%d")) %>%
+  mutate(dateb_20190801 = ifelse(date < dt_boundary_01, "pre", "post"),
+         dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
+  mutate_at(vars(DOD,sex,status, dateb_20190801, dateb_20190821), as.factor) %>%
+write_delim(files$output1, delim="|")
+stopifnot(ncol(death1) == 8 & (nrow (death1) == 108))
 
 death2 <- readr::read_delim(files$input2, delim="|") %>%
   clean_names() %>%
   mutate(age = as.integer(age)) %>%
-  mutate(DOD = as.Date(`date`, "%m/%d/%Y")) %>%
-  mutate_at(vars(DOD,sex,status), as.factor) %>%
+  mutate(DOD = as.Date(`date`, "%Y/%m/%d")) %>%
+  mutate(dateb_20190801 = ifelse(date < dt_boundary_01, "pre", "post"),
+         dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
+  mutate_at(vars(DOD,sex,status, dateb_20190801, dateb_20190821), as.factor) %>%
 write_delim(files$output2, delim="|", na= "NA")
 stopifnot(ncol(death2) == 6 & (nrow (death2) == 974))
 
