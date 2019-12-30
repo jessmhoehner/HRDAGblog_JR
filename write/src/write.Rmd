@@ -40,8 +40,11 @@ To do this, we pull in the clean data from the clean task's output folder and ex
 
 ```{r, clean, message=FALSE}
 require (pacman)
-p_load(dplyr,styler,tidyverse,forcats,readr,janitor,assertr, ggplot2, scales, DataExplorer)
-require(here, assertr)
+pacman::p_load(dplyr,styler,tidyverse,
+               forcats,readr,janitor,
+               assertr, ggplot2, lubridate,
+               scales, DataExplorer, incidence,
+               exactci)
 
 files <- list(input1=here::here("clean/input/flu_data_1_122219.txt"),
               input2=here::here("clean/input/flu_data_2_122219.txt"),
@@ -74,47 +77,31 @@ plot_missing(flu2)
 ```
 ## Summarize variables {-}
 
+We define a function that will allow us to report the most frequently occuring date of report in each of the datasets and call it getmode.
+
+```{r, summarize, message=FALSE}
+
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+```
+
 #should this be its own task where we create and call the summary information from tables?
-First Set
 
-DOD
-There are some days where we see (max) cases reported per day. In order to determine if this is an epidemic, we must examine an epidemiological curve to see if this number of cases per day appears to be significantly greater than the average cases reported each day.
+In order to determine if this is an epidemic, we must examine an epidemiological curve to see if this number of cases per day appears to be significantly greater than the average cases reported each day. The day on which most cases were reported in the first set was `r getmode(flu1$DOD)` and in the second set was `r getmode(flu2$DOD)`
 
-Status
-It looks like we have some people recorded who are not cases, since we are only interested in the number of cases over time, we will remove all rows where the person's status is "Not_flu".
+It looks like we have some people recorded who are not cases, since we are only interested in the number of cases over time, we will remove all rows where the person's status is "Not_flu". For the first set we'll be removing `r table(flu1$status)[["Not_flu"]]` people and in the second set we'll be removing `r table(flu2$status)[["Not_flu"]]` people.
 
-sex
-There are `r table(flu1$sex)[['F']]` Females and `r table(flu1$sex)[['M']]` Males in the first set with an overall mean age of `r round(mean(flu1$age, na.rm=T), 0)` and a median age of `r quantile(flu1$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
-
-time
-Most cases were reported between (earliest time) (latest time). 0.93% of people in this dataset are missing information on the time at which their case was reported 
-
-age 
-The youngest reported individual is `r min(flu1$age, na.rm=T)` and the oldest reported individual is reported as `r max(flu1$age, na.rm=T)`, with `r sum(is.na(flu1$age))`or 6.48% of individuals without age data. 
-
-
-Second Set
-DOD
-There are some days where we see (max) cases reported per day. Again, we will an epidemiological curve to see if this number of cases per day appears to be significantly greater than the average cases reported each day.
-
-Status
-Here we have many more people recorded who are not cases and again we will remove all rows where the person's status is "Not_flu".
-
-sex
-There are `r table(flu2$sex)[['F']]` Females and `r table(flu2$sex)[['M']]` Males in the first set with an overall mean age of `r round(mean(flu2$age, na.rm=T), 0)` and a median age of `r quantile(flu2$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
-
-time
-Most cases were reported between (earliest time) (latest time).
-
-age 
-The youngest reported individual is `r min(flu2$age, na.rm=T)` and the oldest reported individual is reported as `r max(flu2$age, na.rm=T)`, with `r sum(is.na(flu2$age))`or 7.49% of individuals without age data. 
+In the first set there are `r table(flu1$sex)[["F"]]` Females and `r table(flu1$sex)[["M"]]` Males with overall mean age of `r round(mean(flu1$age, na.rm=T), 0)` and a median age of `r quantile(flu1$age, probs=c(0.5), na.rm=TRUE)[[1]]`. In the second set there are `r table(flu2$sex)[["F"]]` Females and `r table(flu2$sex)[["M"]]` Males with overall mean age of `r round(mean(flu2$age, na.rm=T), 0)` and a median age of `r quantile(flu2$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
 
 Fortunately there appears to be very little missing data in the dates, this will be critical in setting up our epidemiological curves.
 
 ## Daily Epidemic Curve (All Reported Cases) From 1st Dataset {-}
 The first set includes initial cases reported from 12 June 2019 -- 10 September 2019. The second set contains additional cases reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine whether or not the pattern of these cases suggests an epidemic of #some outcome of interest, using flu as a placeholder# and to do that we will need to examine them using a common epidemiological tool, an epidemiological curve. 
 
-In order to examine the frequency of reported cases per day across the time period provided, I use the EpiCurve function to specify the dates, counts of the event of interest and the period at which I would like to see each bar. Here
+In order to examine the frequency of reported cases per day across the time period provided, I use the incidence package to obtain the number of cases reported each day and plot this against all of the days for which we have data.
 
 ```{r epic_DOD1, message=FALSE, echo=FALSE}
 #remove notflu cases
@@ -129,16 +116,18 @@ date_case1<- incidence(flu1$DOD, interval = 1 )
 epiplot1<-
   plot(date_case1, border = "white", show_cases=TRUE, 
        ylab = "Reported Cases", xlab= "Date") +
-  scale_x_date(labels = date_format("%d %b %Y"))
+  scale_x_date(labels = date_format("%d %b %Y")) +
   theme_grey() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
   coord_fixed(ratio=2)
 
 epiplot1
 ```
-This pattern appears to suggest that cases increased in the beginning of August but since these are only from approximately 100 people, we were unsure as to how to evaluate whether these were outside of what we would expect to see within this population. 
+This pattern appears to suggest that cases increased in the beginning of JUne and end of August but since these are only from approximately 100 people, we were unsure as to how to evaluate whether these were outside of what we would expect to see within this population. 
 
 Let's examine the 2nd set of data with around 900 people, first removing those people who are not cases, leaving us with nrows(flu2) cases over a period of approximately 1 year. 
+
+## Daily Epidemic Curve (All Reported Cases) From 2nd Dataset {-}
 
 ```{r epic_DOD2, message=FALSE, echo=FALSE}
 #remove notflu cases
@@ -153,47 +142,60 @@ date_case2<- incidence(flu2$DOD, interval = 1 )
 epiplot2<-
   plot(date_case2, border = "white", show_cases=TRUE, 
        ylab = "Reported Cases", xlab= "Date") +
+  scale_x_date(labels = date_format("%d %b %Y")) +
   theme_grey() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
   coord_fixed(ratio=2)
 
 epiplot2
 ```
+Does this suggest an unusual number of cases at any one point in time? It wasn't immediately clear to us from the picture and we couldn't compare the data to any official statistics.
 
-As is common with data in the human rights context, it can often be difficult to obtain official statistics on incidence of a particular outcome of interest. Some group may have an interest in that data not existing in one central location or it may simply never have been collected. Either way, this requires us to break from traditional epidemiological methods and return instead to a classical statistical approach.
+As is common with data in the human rights context, it can often be difficult to obtain official statistics on incidence of a particular outcome of interest. Some group may have an interest in that data not existing in one central location or it may simply never have been collected. Either way, this requires us to break from epidemiological methods and try a classical statistical approach.
 
-These cases are counts. This means that they can be assessed in the context of a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation. In order to establish whether or not these data suggest an epidemic we construct our hypothesis to ask: are there more cases occuring than we would expect to see within a Poisson distribution? Specifically, on the days when we are seeing 4 and 5 cases per day, are these numbers statistically significantly greater than we would expect with normal variation or are they high but not especially so? 
+These cases are counts. This means that they can be assessed in the context of whether or not the represent a normally distributed discrete random variable in a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation. 
 
-If the number of days on which 4 and 5 cases are reported (or, the frequency of the days ) is #stopped on 12.29.19 2:34AM
+In order to establish whether or not these data suggest an epidemic we construct our hypothesis to ask: are there more cases occuring than we would expect to see within the expected variation in a Poisson distribution? Specifically, on the days when we are seeing what appear to be a high number of cases per day, are these numbers statistically significantly greater than we would expect with normal variation or not? 
 
-## Daily Epidemic Curve (All Reported Cases) From 2nd Dataset {-}
+For this we need to account for the days on which we do not have any reported cases by adding these dates back in with counts of zero 
+#how would I do this?
 
-Here we examine the epi curve of the second dataset which includes data from ~600 individuals who have reported as cases.
+Next, we need to obtain the number of deaths occuring on each day or the frequency of deaths/day
 
-```{r epic_DOD, message=FALSE, echo=FALSE}
-flu2$DOD<- as.Date(flu2$DOD)
-assert_that(is.Date(flu2$DOD))
+In order to test our hypothesis we use the stat's package's ppois function to test the likliehood that the frequency of deaths we are observing is within the range of expected variation. Since we want to know specifically if the frequency of cases we are observing is greater than the expected number of cases we perform a one-tailed test. 
 
-# compute daily incidence
-date_case<- incidence(flu2$DOD, interval = 1 )
+For example, if the mean number of cases reported per day is 4 and we're seeing days with 7 cases reported per day, what is the probability of having days with 7 or more cases reported per day?  
 
-epiplot<-
-  plot(date_case, border = "white", show_cases=TRUE, 
-       ylab = "Reported Cases", xlab= "Date") +
-  theme_grey() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
-  coord_fixed(ratio=2)
+## Hypothesis testing
+``` {r hypothesistest, message = FALSE}
+#add in counts of zero for days on which no cases were reported
 
-epiplot
+#set1
+#mean number of cases/day
+counts1 <- count(flu1, flu1$DOD)
+mucpd1 <- mean(counts1$n)
 
-DODarray<-as.array(flu2$DOD, na.rm=FALSE)
-table(DODarray)
+#max number of cases/day
+maxflu1 <-max(counts1$n)
 
-ggsave("epic_DOD.png", plot=last_plot(), dpi= 600)
+#mean number of cases /day in set 2 
+counts2 <- count(flu2, flu2$DOD)
+mucpd2 <- mean(counts2$n)
+
+#max number of cases/day
+maxflu2 <-max(counts2$n)
+
+#set 1
+100*ppois(maxflu1, mucpd1, lower.tail=FALSE)
+poisson.test(round(mucpd1), 1, round(maxflu1), alternative = "g")
+
+#set2
+100*ppois(maxflu2, mucpd2, lower.tail=FALSE)
+poisson.test(round(mucpd2), 1, round(maxflu2), alternative = "g")
+
 ```
-Does this suggest an unusual number of cases at any one point in time?
+Given the mean number of cases reported per day in set one, `r mucpd1`, and the highest number of cases we see in set 1, `r maxflu1`   
 
-## Hypothesis testing task
 
 
 ## Conclusion {-}
