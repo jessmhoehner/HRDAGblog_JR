@@ -30,9 +30,14 @@ death1 <- readr::read_delim(files$input1, delim="|") %>%
   mutate(DOD = as.Date(`date`, "%Y/%m/%d")) %>%
   mutate(dateb_20190801 = ifelse(date < dt_boundary_01, "pre", "post"),
          dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
-  mutate_at(vars(DOD,sex,status, dateb_20190801, dateb_20190821), as.factor) %>%
-write_delim(files$output1, delim="|")
-stopifnot(ncol(death1) == 8 & (nrow (death1) == 108))
+  mutate_at(vars(sex,status, dateb_20190801, dateb_20190821), as.factor) 
+
+#retain only people with status "dead" and add in dates with no deaths
+death1 <-
+  filter(death1, status == "dead") %>%
+  complete(DOD = seq.Date(min(DOD), max(DOD), by="day")) %>%
+  write_delim(files$output1, delim="|")
+stopifnot(ncol(death1) == 8 & (nrow (death1) == 134))
 
 death2 <- readr::read_delim(files$input2, delim="|") %>%
   clean_names() %>%
@@ -40,10 +45,20 @@ death2 <- readr::read_delim(files$input2, delim="|") %>%
   mutate(DOD = as.Date(`date`, "%Y/%m/%d")) %>%
   mutate(dateb_20190801 = ifelse(date < dt_boundary_01, "pre", "post"),
          dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
-  mutate_at(vars(DOD,sex,status, dateb_20190801, dateb_20190821), as.factor) %>%
-write_delim(files$output2, delim="|", na= "NA")
-stopifnot(ncol(death2) == 6 & (nrow (death2) == 974))
+  mutate_at(vars(sex,status, dateb_20190801, dateb_20190821), as.factor)
 
+#retain only people with status "dead" and add in dates with no deaths
+death2 <-
+  filter(death2, status == "dead") %>%
+  complete(DOD = seq.Date(min(DOD), max(DOD), by="day")) %>%
+write_delim(files$output2, delim="|")
+stopifnot(ncol(death2) == 8 & (nrow (death2) == 726))
+
+#specify getmode function
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
 
 ######done####
 
