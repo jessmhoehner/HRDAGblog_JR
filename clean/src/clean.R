@@ -11,17 +11,16 @@
 require(pacman)
 p_load(dplyr,styler,tidyverse,forcats,readr,janitor,assertr)
 
-files <- list(input1=here::here("HRDAGblog_JR/clean/input/death_data_1_122219.txt"),
-              input2=here::here("HRDAGblog_JR/clean/input/death_data_2_122219.txt"),
-              output1=here::here("HRDAGblog_JR/test/input/death1_clean.txt"),
-              output2=here::here("HRDAGblog_JR/test/input/death2_clean.txt"))
+files <- list(input1=here::here("clean/input/death_data_1_122219.txt"),
+              input2=here::here("clean/input/death_data_2_122219.txt"),
+              output1=here::here("clean/output/death1_clean.txt"),
+              output2=here::here("clean/output/death2_clean.txt"))
 
 stopifnot(is.list(files)== TRUE)
 
-#why did we want these in rds files?
-#want to add in variables which are counts of the number of times each date occurs called cases/day here or do it just before graphing?
+# why did we want these in rds files?
 
-#set boundaries for date of interest 
+# set boundaries for date of interest 
 dt_boundary_21 <- as.Date("2019-08-21")
 
 death1 <- readr::read_delim(files$input1, delim="|") %>%
@@ -31,11 +30,11 @@ death1 <- readr::read_delim(files$input1, delim="|") %>%
   mutate(dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
   mutate_at(vars(sex,status,dateb_20190821), as.factor) 
 
-#retain only people with status "dead" and add in dates with no deaths
+# retain only people with status "dead" and add in dates with no deaths
 death1 <-
   filter(death1, status == "dead") %>%
   write_delim(files$output1, delim="|")
-stopifnot(ncol(death1) == 7 & (nrow (death1) == 105))
+stopifnot(ncol(death1) == 7 & (nrow (death1) == 105)) 
 
 death2 <- readr::read_delim(files$input2, delim="|") %>%
   clean_names() %>%
