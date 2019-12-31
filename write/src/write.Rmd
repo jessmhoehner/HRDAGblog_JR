@@ -111,17 +111,22 @@ These deaths are counts collected in a specific time period.This means that they
 
 In order to establish whether or not these data suggest spikes in numbers around events of interest to the client we construct our hypothesis to ask: given the mean number of deaths reported per day prior to the date of interest, is the mean number of deaths per day significantly different after this date? Specifically, on the days when we are seeing what appear to be a high number of deaths per day, are these numbers statistically significantly greater than we would expect with normal variation? 
 
-## Hypothesis testing
+## Hypothesis testing {-}
 
-For this we first need to account for the days on which we do not have any reported deaths by adding these dates back in.
+Next, we call in data from the test task. In this task we prepared our data for hypothesis testing by calculating the mean frequency of deaths per day before and after each of our two dates of interest.
 
-Next, we need to obtain the mean frequency of deaths per day before and after the dates of events of interest. 
+We will compare them using a Poisson test in the stat's package's ppois function to test the likliehood that the mean frequency of deaths we are observing prior to the date of interest is statistically significantly different from the mean frequency of deaths per day following the date of interest. Since we want to know specifically if the frequency of deaths we are observing after the date of interest is is greater than the mean frequency prior to the date of interest, we perform a one-tailed test. 
 
-Finally, in order to test our hypothesis we use the stat's package's ppois function to test the likliehood that the frequency of deaths we are observing is within the range of expected variation. Since we want to know specifically if the frequency of deaths we are observing is greater than the expected number of deaths we perform a one-tailed test. 
-
-For example, if the mean number of deaths reported per day is 4 and we're seeing days with 7 deaths reported per day, what is the likelihood of having days with 7 or more deaths reported per day?  
+For example, if the mean number of deaths reported per day prior to the date of interest is 4 and we're seeing a mean of 7 deaths reported per day, are these two means statistically significantly different from one another?
 
 ``` {r hypothesistest, message = FALSE}
+
+files <- list(input1=here::here("test/output/death1_test.txt"),
+              input2=here::here("test/output/death2_test.txt"))
+              
+death1 <- readr::read_delim(files$input1, delim="|")
+death2 <- readr::read_delim(files$input2, delim="|")
+
 #test 1
 100*ppois(maxdeath1, mucpd1, lower.tail=FALSE)
 poisson.test(round(mucpd1), 1, round(maxdeath1), alternative = "g")
