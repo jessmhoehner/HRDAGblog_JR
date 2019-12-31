@@ -11,12 +11,12 @@
 require(pacman)
 p_load(dplyr,styler,tidyverse,readr,assertr)
 
-files <- list(input1 = here::here("HRDAGblog_JR/test/input/death1_clean.txt"),
-              input2 = here::here("HRDAGblog_JR/test/input/death2_clean.txt"),
-              output1 = here::here("HRDAGblog_JR/test/output/counts1_pre.txt"),
-              output2 = here::here("HRDAGblog_JR/test/output/counts1_post.txt"),
-              output3 = here::here ("HRDAGblog_JR/test/output/counts2_pre.txt"),
-              output4 = here::here ("HRDAGblog_JR/test/output/counts2_post.txt"))
+files <- list(input1 = here::here("clean/output/death1_clean.txt"),
+              input2 = here::here("clean/output/death2_clean.txt"),
+              output1 = here::here("test/output/counts1_pre.txt"),
+              output2 = here::here("test/output/counts1_post.txt"),
+              output3 = here::here ("test/output/counts2_pre.txt"),
+              output4 = here::here ("test/output/counts2_post.txt"))
 
 stopifnot(is.list(files)== TRUE)
 
