@@ -11,30 +11,66 @@
 require(pacman)
 p_load(dplyr,styler,tidyverse,readr,assertr)
 
-files <- list(input1=here::here("clean/output/death1_clean.txt"),
-              input2=here::here("clean/output/death2_clean.txt"),
-              output1=here::here("test/output/death1_test.txt"),
-              output2=here::here("test/output/death2_test.txt"))
+files <- list(input1 = here::here("HRDAGblog_JR/test/input/death1_clean.txt"),
+              input2 = here::here("HRDAGblog_JR/test/input/death2_clean.txt"),
+              output1 = here::here("HRDAGblog_JR/test/output/counts1_pre.txt"),
+              output2 = here::here("HRDAGblog_JR/test/output/counts1_post.txt"),
+              output3 = here::here ("HRDAGblog_JR/test/output/counts2_pre.txt"),
+              output4 = here::here ("HRDAGblog_JR/test/output/counts2_post.txt"))
 
 stopifnot(is.list(files)== TRUE)
 
 death1 <- readr::read_delim(files$input1, delim="|")
+
 death2 <- readr::read_delim(files$input2, delim="|")
 
-#set1
-#mean number of deaths/day before 08 August 2019
-counts1 <- count(death1, death1$DOD) #FIXME: add date component?
-mucpd1 <- mean(counts1$n)
+# set1
+# before 21 August 2019
+counts1_pre <- count(death1, dateb_20190821, DOD) %>%
+  filter (dateb_20190821 == "pre") %>%
+  complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
 
-#max number of deaths/day
-maxdeath1 <-max(counts1$n)
+#set NAs to 0 
+counts1_pre$n <- ifelse(is.na(counts1_pre$n), 0, counts1_pre$n) 
 
-#set 2 
-#mean number of deaths /day
-counts2 <- count(death2, death2$DOD) #FIXME: add date component?
-mucpd2 <- mean(counts2$n)
+counts1_pre %>%
+#  stopifnot(dateb_20190821 == "pre") %>%
+#  stopifnot(nrow(counts1_20190821) == 70) %>%
+#  stopifnot(is.na(counts1_20190821$n) == FALSE) %>%
+  write_delim(files$output1, delim="|")
 
-#max number of deaths/day
-maxdeath2 <-max(counts2$n)
+# after 21 August 2019 
+counts1_post <- count(death1, dateb_20190821, DOD) %>%
+  filter (dateb_20190821 == "post") %>%
+  complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
 
-# need to add the variables to the dataframe and output that
+#set NAs to 0 
+counts1_post$n <- ifelse(is.na(counts1_post$n), 0, counts1_post$n) 
+
+counts1_post %>%
+  write_delim(files$output2, delim="|")
+
+# set 2 
+# before 21 August 2019
+counts2_pre <- count(death2, dateb_20190821, DOD) %>%
+  filter (dateb_20190821 == "pre") %>% 
+  complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
+
+#set NAs to 0 
+counts2_pre$n <- ifelse(is.na(counts2_pre$n), 0, counts2_pre$n) 
+
+counts2_pre %>%
+  write_delim(files$output3, delim="|")
+
+# after 21 August 2019 
+counts2_post <- count(death2, dateb_20190821, DOD) %>%
+  filter (dateb_20190821 == "post") %>%
+  complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
+
+#set NAs to 0 
+counts2_post$n <- ifelse(is.na(counts2_post$n), 0, counts2_post$n) 
+
+counts2_post %>%
+  write_delim(files$output4, delim="|")
+
+###done###
