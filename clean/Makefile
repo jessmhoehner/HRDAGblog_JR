@@ -11,14 +11,20 @@ HERE := $(shell git rev-parse --show-toplevel)
 
 .PHONY: all clean
 
-all: output/flu1.csv
+all: output/death1_clean.txt
+     output/death2_clean.txt
 
 clean:
 	rm output/*
 
-output/flu1.rds: \
+output/death1_clean.txt: \
 		src/clean.R \
-		$(HERE)/import/output/flu1.csv
+		$(HERE)/import/death_data_1_122219.txt
 	Rscript --vanilla $<
-# I want to be able to clean both files using the same task, how di I did this?
+		
+output/death2_clean.txt: \
+		src/clean.R \
+		$(HERE) import/death_data_2_122219.txt
+	Rscript --vanilla $<
+
 # done.
