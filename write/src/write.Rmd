@@ -184,17 +184,14 @@ max2_post <- max(cts2post$n)
 
 # set 1
 like1pre<-poisson.test(mu1pre, 1, max1_pre, alternative = "g", conf.level = 0.95)
-like1pre
 
 like1post<-poisson.test(mu1post, 1, max1_post, alternative = "g", conf.level = 0.95)
-like1post
 
 # set 2
 like2pre<-poisson.test(mu2pre, 1, max2_pre, alternative = "g", conf.level = 0.95)
-like2pre
 
 like2post<-poisson.test(mu2post, 1, max2_post, alternative = "g", conf.level = 0.95)
-like2post
+
 ```
 
 In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` death reported per day and a maximum of `r max1_pre` deaths reported per day. We cannot reject the hypothesis that the maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.98).
