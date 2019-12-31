@@ -1,5 +1,5 @@
 ---
-title: 'From Scripts to Projects: Using a Modular, Auditable, and Reproducible Workflow to Investigate a Potential Epidemic'
+title: 'From Scripts to Projects: Learning a Modular, Auditable, and Reproducible Workflow by Example'
 author: "Jessica Randall"
 date: "12/29/2019"
 output:
@@ -7,11 +7,13 @@ output:
     latex_engine: xelatex
     toc: yes
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, message = FALSE}
+require (pacman)
+pacman::p_load(dplyr,tidyverse,readr,assertr, ggplot2,scales,incidence,tinytex)
+
 ```
 
-# Introduction {-}
+## Introduction {-}
 
 Having been a big fan of HRDAG's work and fellow alumna of Emory's Rollin's School of Public Health, I have been delighted to have had opportunities to chat with both Megan and Patrick over the last year. I was equally thrilled when Patrick asked if I might want to work on an epidemiological problem the team had been presented with. While I had read about the organization's modular workflow (link) and watched Patrick's talk on how to do principled data processing (link), a lot of it was initially beyond my scope as someone who had only formally learned SAS and dabbled in self-taught Python and R. I fully admit to my R code looking suspiciously similar to all of the examples of amateur coding that Tarak uses in his post on why .Rproj is harmful to reproducible and auditable data science (link). 
 
@@ -19,9 +21,7 @@ Excited to help out where I could and learn from a master, I was undettered by t
 
 As I worked, Patrick also encouraged me to keep notes on what I liked and disliked about the process, where I felt it made things easier and where I noticed friction. The following post summarizes those notes and the work that went into determining the answers to the client's question.
 
-## Setup {-}
-
-To begin the project, we start with a task. Each task is a microchasm of the entire project and at HGRAG, not only does this serve to facilitate the team's collaboration across time zones and programming languages. This results in projects which are auditable and have reproducible results; anyone looking at the code can determine exactly how any output from it was produced and anyone working on the task at anytime can pick it up and recreate the same output you wrote. As a scientist, this need for reproducibility resonated with me and even if you are a team of one in your workplace (as many statisticians reading this might be) your closest collaborator is you six months from now. Break up your project into discrete tasks and thank yourself later. I plan to implement this style of project organization even at my work outside of HRDAG.
+To begin the project, we start with a task. Each task is a microchasm of the entire project and at HGRAG this facilitates the team's collaboration across time zones and programming languages. It also results in projects which are auditable and have reproducible results; anyone looking at the code can determine exactly how any output from it was produced and anyone working on the task at anytime can pick it up and recreate the same output you wrote. As a scientist, this need for reproducibility resonated with me and even if you are a team of one in your workplace (as many statisticians reading this might be) your closest collaborator is you six months from now. Break up your project into discrete tasks and thank yourself later. I certainly plan to implement this style of project organization at my work outside of HRDAG.
 
 To make the goals of each task even clearer, each task has a Makefile. The Makefile serves as an outline of each task not only for our benefit, but mainly for the computer to read it. Imagine being able to work on a group project with team members around the world, and still have an auditable trail of each person's work. The Makefile makes that scaffolding clear and traceable. For more information on Make files check out Mike Bostock's post here (link) and for the inspiration for HRDAG's project oriented workflow check out Jenny Bryan's post here (link). 
 
@@ -37,7 +37,7 @@ To clean the data, we check for any out of bounds dates, any values where one le
 
 We also canonicalize the data. This process refers to making sure that the names of the variables we are comparing are standard across the datasets if we were to combine them. We are working with two datasets here and since they overlkap in terms of when they were collected, we'd like to keep them seperate while still having variables named consistently.
 
-Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person's status is "Not_death". For the first set we'll be removing `r table(death1$status)[["Not_death"]]` people and in the second set we'll be removing `r table(death2$status)[["Not_death"]]` people. 
+Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person's status is "Not_death". 
 
 We are also interested in a couple of dates of interest so we created a variable indicating whether or not a death occured prior to or following that date. 
 
@@ -47,13 +47,9 @@ The data are cleaned as part of the clean task and all of that code is stored in
 
 To use the clean data, we pull it from the clean task's output folder.
 
-```{r, cleanand sum, message=FALSE}
-require (pacman)
-pacman::p_load(dplyr,styler,tidyverse,readr,assertr, ggplot2,scales,incidence,exactci)
-
+```{r, clean, message=FALSE}
 files <- list(input1=here::here("clean/output/death1_clean.txt"),
-               input2=here::here("clean/output/death2_clean.txt"))
-stopifnot(is.list(files)== TRUE)
+              input2=here::here("clean/output/death2_clean.txt"))
 
 death1 <- readr::read_delim(files$input1, delim="|")
 
@@ -65,7 +61,7 @@ In order to see if there appear to be an abnormally high number of deaths, we wi
 
 In our data, if an epidemic of deaths were occuring, we would expect to see a spike in the number of deaths reported per day.
 
-## Daily Epi Curve (All Reported Deaths) From 1st Dataset {-}
+## Epi Curve 1{-}
 
 The first set includes deaths reported from 12 June 2019 -- 10 September 2019, 91 days or approximately 3 months. The second set contains deaths reported from 1 January 2019 -- 14 December 2019, 348 days or approximately 11 months.
 
@@ -84,15 +80,15 @@ epiplot1<-
   scale_x_date(labels = date_format("%d %b %Y")) +
   theme_grey() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black")) +
-  coord_fixed(ratio=3)
+  coord_fixed(ratio=2)
 epiplot1
 
 ```
-This pattern appears to suggest that deaths spiked in the beginning of June and end of August into September. However, since these are only from approximately 100 people over 3 months, it is not clear that these numbers are abnormally high since we don't know what normal looks like for this population.
+This pattern appears to suggest that deaths spiked in the beginning of June and end of August into September. However, with such a small group of people in such a small amount of time, it is not clear that these numbers are abnormally high since we don't know what normal looks like for this population.
 
 Let's examine the 2nd set of data with around 900 people over a period of approximately 11 months.
 
-## Daily Epi Curve (All Reported Deaths) From 2nd Dataset {-}
+## Epi Curve 2 {-}
 
 ```{r epic_DOD2, message=FALSE, echo=FALSE}
 # compute daily incidence
@@ -117,7 +113,7 @@ These deaths are counts collected in a specific time period. This means that the
 
 In order to establish whether or not these data belong within that normal amount of variation we examine both the means and maximum deaths per day. Given the mean number of deaths reported per day prior to the date of interest, is the mean number of deaths per day significantly different after this date? Secondly, given the mean number of deaths per day, is the highest recorded number of deaths per day significantly different than the means for each time period?
 
-## Poisson Exact Test {-}
+## Test {-}
 
 To determine this, we call in data from the test task. In this task we prepared our data for hypothesis testing by obtaining the counts for each date, i.e., the number of times each date is reported. Since a death wasn't reported at least once per day we also added in dates where we had no reported deaths with counts of zero.
 
@@ -161,9 +157,9 @@ res2
 
 ```
 
-In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` deaths reported per day and after 21 August 2019 there was an average of  `r mu1post` deaths reported per day. The mean number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.86). 
+In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` death reported per day and after 21 August 2019 there was an average of  `r mu1post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.86). 
 
-In the second dataset, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day and after 21 August 2019 there was an average of  `r mu2post` deaths reported per day. The mean number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.60). 
+In the second dataset, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day and after 21 August 2019 there was an average of  `r mu2post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.60). 
 
 Though the means are not significantly different from one another, there are some days within each dataset on which we see numbers of reported deaths which are higher than the average, sometimes much higher. Does this suggest a spike or is this part of the normal amount of variation we would expect to see within a randomly distributed Poisson variable? 
 
@@ -201,20 +197,24 @@ like2post<-poisson.test(mu2post, 1, max2_post, alternative = "g", conf.level = 0
 like2post
 ```
 
-In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` deaths reported per day and a maximum of `r max1_pre` deaths reported per day. The maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.98).
+In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` death reported per day and a maximum of `r max1_pre` deaths reported per day. We cannot reject the hypothesis that the maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.98).
 
-After 21 August 2019 there was an average of  `r mu1post` deaths reported per day and a maximum of `r max1_post` deaths reported per day. The maximum number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.96). 
+After 21 August 2019 there was an average of  `r mu1post` deaths reported per day and a maximum of `r max1_post` deaths reported per day. We cannot reject the hypothesis that the maximum number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported following 21 August 2019 at the 95% confidence interval (p = 0.96). 
 
-In the second dataset, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day and a maximum of `r max2pre` deaths reported per day.The maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 1.0).
+In the second dataset, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day and a maximum of `r max2_pre` deaths reported per day. We cannot reject the hypothesis that the maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval(p = 1.0).
 
-After 21 August 2019 there was an average of  `r mu2post` deaths reported per day and a maximum of `r max2_post` deaths reported per day. The maximum number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.96). 
+After 21 August 2019 there was an average of  `r mu2post` deaths reported per day and a maximum of `r max2_post` deaths reported per day. We cannot reject the hypothesis that the maximum number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported following 21 August 2019 at the 95% confidence interval (p = 0.96). 
+
+## Write {-}
+
+Finally, in what struck me as the most incredible part of this process, is the write task. This entire report was generated from an R markdown file stored in the write task's src folder. This still excites me and now I want to write as many reports as I can this way. An especially fun detail is the use of embedded variables. Throughout this report I've reported statistics about this dataset like the means . If we suddenly received more data and I had to regenerate this report, instead of having to manually check that each number I cited was updated, I could drop the files into the clean task's import folder and update the entire report.
 
 
 ## Acknowledgements {-}
 
-Learning HRDAg's data analysis process has been an incredible learning opportunity for me. Looking at projects from the very macro ("How many tasks do I have?") to the very micro ("Can I pipe this?") levels is a fundamental shift in the way I had been working and I know I will take this into my future projects. 
+Learning HRDAG's data analysis process has been an incredible learning opportunity for me. Looking at projects from the very macro ("How many tasks do I have?") to the very micro ("Can I pipe this line?") levels is a fundamental shift in the way I had been working and I know I will take this into my future projects. 
 
-this project architecture structure discussed in this post, with discrete tasks using Makefiles, was developed by Drs. Scott Weikart and Jeff Klingner and formalized around 2007. I’m particularly grateful to Dr. Patrick Ball, who motivated the post, helped me think through the concepts, and provided valuable feedback.
+The project architecture structure discussed in this post, with discrete tasks using Makefiles, was developed by Drs. Scott Weikart and Jeff Klingner and formalized around 2007. I like to thank Tarak Shah for his incredibly motivating post on the dangers of .Rproj style of project management, Dr. Amelia Hoover Green for her detailed post on what it means to clean and canonicalize data, Dr. Megan Price for her encouragement, and most of all Dr. Patrick Ball for inviting me to solve this puzzle and for his patience as learned from the best.
 
 ```{r session_info, message=FALSE, include=FALSE}
 sessionInfo()
