@@ -27,15 +27,25 @@ To make the goals of each task even clearer, each task has a Makefile. The Makef
 
 For this project I have a clean task, a test task, and a write task each with its own Makefile, input, output, and src folder for the source code. 
 
-## Clean and Summarize {-}
+## Clean {-}
 
 I start with the clean task. In the input folder of this task I include the two datasets of with reported deaths, the src folder contains the R code to clean up the code. I used RStudio to test the code for bugs (with frequent restarts and fresh environments) and use Microsoft Visual Studio Code to update the code that gets pushed to the project Github repository. I had a small bug early on with an error message I didn't want to immediately address so I created an issue on the GitHub to pick it back up later. I knew where the code had issues but I could count on the rest of it working as expected if (when) I'd need to spend time on other projects. This also had the added benefit (trap?) of making me feel like I'd actually made progress instead of staring down the endless empty field of .R file with however many tasks left to code. Win!
 
 The first dataset includes initial deaths reported from 12 June 2019 -- 10 September 2019. The second file contains additional deaths reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine if the number of deaths reported during a specific time period appeared to be unusually high, and the relationship of these reported detahs to dates of external events. 
 
-First, we'd like to do some exploratory data analysis and summarize how much complete information we have for each individual reported on in the dataset.
+To clean the data, we check for any out of bounds dates, any values where one level of a variable may be coded different ways (ex: "seventeen" instead of "17"), and make sure that we don't have strings of text where we expect to see numbers and vicer versa. In this case we use informal (instead of manual) unit tests. This means that instead of checking the dimensions or the top 5 rows of a dataset visually, we specify some condition the data has to meet and tell it to stop running if that condition is not met. #FIXME: need to put in the tests
 
-To do this, we pull in the clean data from the clean task's output folder. #FIXME: add in more detail about steps in clean task
+We also canonicalize the data. This process refers to making sure that the names of the variables we are comparing are standard across the datasets if we were to combine them. We are working with two datasets here and since they overlkap in terms of when they were collected, we'd like to keep them seperate while still having variables named consistently.
+
+Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person's status is "Not_death". For the first set we'll be removing `r table(death1$status)[["Not_death"]]` people and in the second set we'll be removing `r table(death2$status)[["Not_death"]]` people. 
+
+We are also interested in a couple of dates of interest so we created a variable indicating whether or not a death occured prior to or following that date. 
+
+Since this is a sample and not a complete record of all people who have died in this time period, we expect that this data is incomplete but we cannot say to what extent our results will be generalizable to the population from which these data were obtained. 
+
+The data are cleaned as part of the clean task and all of that code is stored in the clean.R file in the clean/src folder.
+
+To use the clean data, we pull it from the clean task's output folder.
 
 ```{r, cleanand sum, message=FALSE}
 require (pacman)
@@ -51,21 +61,17 @@ death2 <- readr::read_delim(files$input2, delim="|")
 
 ```
 
-In order to determine if the number of deaths reported is abnormally high, we use an epidemiological (or epi) curve to see if this number of deaths per day appears to spike anywhere. Epi curves are often used in the investigation into whether an outbreak of an outcome has occured and can even suggest a means of propogation; curves for infections transmitted from person to person have different shapes than curves of diseases transmitted from a water source, for example. 
+In order to see if there appear to be an abnormally high number of deaths, we will use an epidemiological (or epi) curve. Epi curves are used in investigations of potential outbreaks and their shape can even suggest a means of propogation; curves for infections transmitted from person to person have different shapes than curves of diseases transmitted from a water source, for example. 
 
-In our data, if an epidemic of deaths were occuring, we would expect to see a spike in the number of deaths reported per day. The day on which most deaths were reported in the first set was `r getmode(death1$DOD)` and in the second set was `r getmode(death2$DOD)`. It is unclear whether or not these would be high enough to be considered spikes.
-
-It looks like we have some people recorded who are not deaths, since we are only interested in the number of deaths over time, we remove all rows where the person's status is "Not_death". For the first set we'll be removing `r table(death1$status)[["Not_death"]]` people and in the second set we'll be removing `r table(death2$status)[["Not_death"]]` people. ##FIXME: discuss in past tense
-
-In the first set there are `r table(death1$sex)[["F"]]` Females and `r table(death1$sex)[["M"]]` Males with overall mean age of `r round(mean(death1$age, na.rm=T), 0)` and a median age of `r quantile(death1$age, probs=c(0.5), na.rm=TRUE)[[1]]`. In the second set there are `r table(death2$sex)[["F"]]` Females and `r table(death2$sex)[["M"]]` Males with overall mean age of `r round(mean(death2$age, na.rm=T), 0)` and a median age of `r quantile(death2$age, probs=c(0.5), na.rm=TRUE)[[1]]`. 
-
-Fortunately there appears to be very little missing data in the dates, this will be critical in setting up our epi curves.
+In our data, if an epidemic of deaths were occuring, we would expect to see a spike in the number of deaths reported per day.
 
 ## Daily Epi Curve (All Reported Deaths) From 1st Dataset {-}
 
-The first set includes initial deaths reported from 12 June 2019 -- 10 September 2019, 91 days or approximately 3 months. The second set contains additional deaths reported from 1 January 2019 -- 14 December 2019, 348 days or approximately 11 months.
+The first set includes deaths reported from 12 June 2019 -- 10 September 2019, 91 days or approximately 3 months. The second set contains deaths reported from 1 January 2019 -- 14 December 2019, 348 days or approximately 11 months.
 
-In order to examine the frequency of reported deaths per day across the time period provided, I use the incidence package to obtain the number of deaths reported each day and plot this against all of the days for which we have data.
+In order to examine the frequency of reported deaths per day across the time period provided, we use the incidence package to obtain the number of deaths reported each day and plot this against all of the days for which we have data.
+
+Since these graphs require relatively short blocks of code and don't require major changes to the data, they are not a seperate task.
 
 ```{r epic_DOD1, message=FALSE, echo=FALSE}
 # compute daily incidence
@@ -82,9 +88,9 @@ epiplot1<-
 epiplot1
 
 ```
-This pattern appears to suggest that deaths spiked in the beginning of June and end of August into September. However, since these are only from approximately 100 people over 3 months, it is not clear that the days on which we see high numbers of deaths would be outside of what we would expect to see within normal variation in this population. 
+This pattern appears to suggest that deaths spiked in the beginning of June and end of August into September. However, since these are only from approximately 100 people over 3 months, it is not clear that these numbers are abnormally high since we don't know what normal looks like for this population.
 
-Let's examine the 2nd set of data with around 900 people, first removing those people who are not actually dead, leaving us with nrows(death2) deaths over a period of approximately 11 months. 
+Let's examine the 2nd set of data with around 900 people over a period of approximately 11 months.
 
 ## Daily Epi Curve (All Reported Deaths) From 2nd Dataset {-}
 
@@ -103,45 +109,112 @@ epiplot2<-
 
 epiplot2
 ```
-This graph suggests that spikes occured in June or July but is 6 deaths reported per day significantly greater than 4 or 5 deaths reported in a day? With more data it appears even less clear if the days which have "high" numbers of deaths are outside of the normal amount of vartiation around the mean that we would expect.
+This graph suggests that spikes occured in June or July but with more data it appears even less clear if the days which have higher numbers of deaths are outside of the normal variation in this population.
 
-As is common with data in the human rights context, it can often be difficult to obtain official statistics on incidence of a particular outcome of interest. Some group may have an interest in that data not existing in one central location or it may simply never have been collected. Either way, this requires us to try a classical statistical approach.
+As is common with data in the human rights context, it can often be difficult to obtain reliable statistics on incidence of a particular outcome of interest so we do not have a reference for the underlying rate of deaths in this population. Some group may have an interest in that data not existing in one central location or it may simply never have been collected. Either way, this suggests the need to try a classical statistical approach.
 
-These deaths are counts collected in a specific time period.This means that they can be assessed in the context of whether or not the represent a normally distributed discrete random variable in a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation around the mean number of events in a given time period. 
+These deaths are counts collected in a specific time period. This means that they can be assessed in the context of whether or not they represent a normally distributed discrete random variable in a Poisson distribution. Data which follow a normal Posisson distribution exhibit expected amounts of variation around the mean number of events in a given time period. 
 
-In order to establish whether or not these data suggest spikes in numbers around events of interest to the client we construct our hypothesis to ask: given the mean number of deaths reported per day prior to the date of interest, is the mean number of deaths per day significantly different after this date? Specifically, on the days when we are seeing what appear to be a high number of deaths per day, are these numbers statistically significantly greater than we would expect with normal variation? 
+In order to establish whether or not these data belong within that normal amount of variation we examine both the means and maximum deaths per day. Given the mean number of deaths reported per day prior to the date of interest, is the mean number of deaths per day significantly different after this date? Secondly, given the mean number of deaths per day, is the highest recorded number of deaths per day significantly different than the means for each time period?
 
-## Hypothesis testing {-}
+## Poisson Exact Test {-}
 
-Next, we call in data from the test task. In this task we prepared our data for hypothesis testing by calculating the mean frequency of deaths per day before and after each of our two dates of interest.
+To determine this, we call in data from the test task. In this task we prepared our data for hypothesis testing by obtaining the counts for each date, i.e., the number of times each date is reported. Since a death wasn't reported at least once per day we also added in dates where we had no reported deaths with counts of zero.
 
-We will compare them using a Poisson test in the stat's package's ppois function to test the likliehood that the mean frequency of deaths we are observing prior to the date of interest is statistically significantly different from the mean frequency of deaths per day following the date of interest. Since we want to know specifically if the frequency of deaths we are observing after the date of interest is is greater than the mean frequency prior to the date of interest, we perform a one-tailed test. 
+We use the poisson.test function in R's stats package to determine if the differences in the means prior to and following 21 August 2019 are significantly different from one another at the 95% confidence interval. 
 
-For example, if the mean number of deaths reported per day prior to the date of interest is 4 and we're seeing a mean of 7 deaths reported per day, are these two means statistically significantly different from one another?
+Our null hypothesis is that the means are not statistically significantly different from one another (mupost- mupre = 0) and our alternative hypothesis is that the means are significantly different from one another (mupost-mupre =! 0). If we observe a p-value < 0.05, we would reject the null, indicating that the difference between the means is not zero. 
 
-``` {r hypothesistest, message = FALSE}
+``` {r test 1, message = FALSE}
 
-files <- list(input1=here::here("test/output/death1_test.txt"),
-              input2=here::here("test/output/death2_test.txt"))
-              
-death1 <- readr::read_delim(files$input1, delim="|")
-death2 <- readr::read_delim(files$input2, delim="|")
+files <- list(cts1 = here::here("test/output/counts1_pre.txt"),
+              cts2 = here::here("test/output/counts1_post.txt"),
+              cts3 = here::here ("test/output/counts2_pre.txt"),
+              cts4 = here::here ("test/output/counts2_post.txt"))
 
-#test 1
-100*ppois(maxdeath1, mucpd1, lower.tail=FALSE)
-poisson.test(round(mucpd1), 1, round(maxdeath1), alternative = "g")
+cts1pre <- readr::read_delim(files$cts1, delim="|")
+cts1post <- readr::read_delim(files$cts2, delim="|")
+cts2pre <- readr::read_delim(files$cts3, delim="|")
+cts2post <- readr::read_delim(files$cts4, delim="|")
 
-#test 2
-100*ppois(maxdeath2, mucpd2, lower.tail=FALSE)
-poisson.test(round(mucpd2), 1, round(maxdeath2), alternative = "g")
+# set 1
+# mean deaths per day prior to 21 August 2019
+mu1pre <- round(mean(cts1pre$n))
+
+# mean deaths per day following 21 August 2019
+mu1post <- round(mean(cts1post$n))
+
+#test
+res1 <-poisson.test(mu1pre, 1, mu1post, alternative = "g", conf.level = 0.95)
+res1
+
+# set 2
+# mean deaths per day prior to 21 August 2019
+mu2pre <- round(mean(cts2pre$n))
+
+# mean deaths per day following 21 August 2019
+mu2post <- round(mean(cts2post$n))
+
+#test
+res2 <- poisson.test(mu2pre, 1, mu2post, alternative = "g", conf.level = 0.95)
+res2
 
 ```
-Given the mean number of deaths reported per day in set one, `r mucpd1`, and the highest number of deaths we see in set 1, `r maxdeath1`   
+
+In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` deaths reported per day and after 21 August 2019 there was an average of  `r mu1post` deaths reported per day. The mean number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.86). 
+
+In the second dataset, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day and after 21 August 2019 there was an average of  `r mu2post` deaths reported per day. The mean number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.60). 
+
+Though the means are not significantly different from one another, there are some days within each dataset on which we see numbers of reported deaths which are higher than the average, sometimes much higher. Does this suggest a spike or is this part of the normal amount of variation we would expect to see within a randomly distributed Poisson variable? 
+
+Our null hypothesis is that the maximum number of reported deaths per day is not statistically significantly different from the mean number of deaths reported per day (maxpre - mupre = 0) and our alternative hypothesis is that the maximum is significantly different from the mean (maxpre-mupre =! 0). If we observe a p-value < 0.05, we would reject the null, indicating that the maximum value is significantly different from the mean reported deaths per day. 
+
+``` {r, test2, message = FALSE}
+# set 1
+# maximum deaths per day prior to 21 August 2019
+max1_pre <- max(cts1pre$n)
+  
+# maximum deaths per day following 21 August 2019
+max1_post <- max(cts1post$n) 
+  
+# set 2
+# maximum deaths per day prior to 21 August 2019
+max2_pre <- max(cts2pre$n)
+
+# maximum deaths per day following 21 August 2019
+max2_post <- max(cts2post$n)
+  
+# likelihood of observing the maximum deaths/day given the mean
+
+# set 1
+like1pre<-poisson.test(mu1pre, 1, max1_pre, alternative = "g", conf.level = 0.95)
+like1pre
+
+like1post<-poisson.test(mu1post, 1, max1_post, alternative = "g", conf.level = 0.95)
+like1post
+
+# set 2
+like2pre<-poisson.test(mu2pre, 1, max2_pre, alternative = "g", conf.level = 0.95)
+like2pre
+
+like2post<-poisson.test(mu2post, 1, max2_post, alternative = "g", conf.level = 0.95)
+like2post
+```
+
+In the first dataset, prior to 21 August 21 2019, there was an average of `r mu1pre` deaths reported per day and a maximum of `r max1_pre` deaths reported per day. The maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.98).
+
+After 21 August 2019 there was an average of  `r mu1post` deaths reported per day and a maximum of `r max1_post` deaths reported per day. The maximum number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.96). 
+
+In the second dataset, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day and a maximum of `r max2pre` deaths reported per day.The maximum number of deaths reported prior to 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 1.0).
+
+After 21 August 2019 there was an average of  `r mu2post` deaths reported per day and a maximum of `r max2_post` deaths reported per day. The maximum number of deaths reported following 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.96). 
 
 
+## Acknowledgements {-}
 
-## Conclusion {-}
+Learning HRDAg's data analysis process has been an incredible learning opportunity for me. Looking at projects from the very macro ("How many tasks do I have?") to the very micro ("Can I pipe this?") levels is a fundamental shift in the way I had been working and I know I will take this into my future projects. 
 
+this project architecture structure discussed in this post, with discrete tasks using Makefiles, was developed by Drs. Scott Weikart and Jeff Klingner and formalized around 2007. I’m particularly grateful to Dr. Patrick Ball, who motivated the post, helped me think through the concepts, and provided valuable feedback.
 
 ```{r session_info, message=FALSE, include=FALSE}
 sessionInfo()
