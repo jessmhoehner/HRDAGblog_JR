@@ -54,8 +54,8 @@ death1 <- readr::read_delim(files$input1, delim="|")
 
 death2 <- readr::read_delim(files$input2, delim="|")
 
-head(deaths1)
-head(deaths2)
+head(death1)
+head(death2)
 ```
 
 In order to see if there appear to be an abnormally high number of deaths, we will use an epidemiological (or epi) curve. Epi curves are used in investigations of potential outbreaks and their shape can even suggest a means of propogation; curves for infections transmitted from person to person have different shapes than curves of diseases transmitted from a water source, for example. 
