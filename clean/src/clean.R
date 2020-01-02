@@ -41,7 +41,7 @@ death2 <- readr::read_delim(files$input2, delim="|") %>%
   mutate(dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
   mutate_at(vars(status, dateb_20190821), as.factor)
 
-#retain only people with status "dead" and add in dates with no deaths
+# retain only people with status "dead" and add in dates with no deaths
 death2 <-
   filter(death2, status == "dead") %>%
 write_delim(files$output2, delim="|")
