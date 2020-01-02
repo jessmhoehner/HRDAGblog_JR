@@ -30,13 +30,12 @@ counts1_pre <- count(death1, dateb_20190821, DOD) %>%
   filter (dateb_20190821 == "pre") %>%
   complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
 
-#set NAs to 0 
+# set NAs to 0 
 counts1_pre$n <- ifelse(is.na(counts1_pre$n), 0, counts1_pre$n) 
 
 counts1_pre %>%
-#  stopifnot(dateb_20190821 == "pre") %>%
-#  stopifnot(nrow(counts1_20190821) == 70) %>%
-#  stopifnot(is.na(counts1_20190821$n) == FALSE) %>%
+verify(ncol(counts1_pre) == 3) %>%
+verify(not_na(counts1_pre$n)) %>%
   write_delim(files$output1, delim="|")
 
 # after 21 August 2019 
@@ -44,10 +43,13 @@ counts1_post <- count(death1, dateb_20190821, DOD) %>%
   filter (dateb_20190821 == "post") %>%
   complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
 
-#set NAs to 0 
+# set NAs to 0 
 counts1_post$n <- ifelse(is.na(counts1_post$n), 0, counts1_post$n) 
 
+# export
 counts1_post %>%
+  verify(ncol(counts1_post) == 3) %>%
+  verify(not_na(counts1_post$n)) %>%
   write_delim(files$output2, delim="|")
 
 # set 2 
@@ -56,10 +58,13 @@ counts2_pre <- count(death2, dateb_20190821, DOD) %>%
   filter (dateb_20190821 == "pre") %>% 
   complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
 
-#set NAs to 0 
+# set NAs to 0 
 counts2_pre$n <- ifelse(is.na(counts2_pre$n), 0, counts2_pre$n) 
 
+# export
 counts2_pre %>%
+  verify(ncol(counts2_pre) == 3) %>%
+  verify(not_na(counts2_pre$n)) %>%
   write_delim(files$output3, delim="|")
 
 # after 21 August 2019 
@@ -67,10 +72,14 @@ counts2_post <- count(death2, dateb_20190821, DOD) %>%
   filter (dateb_20190821 == "post") %>%
   complete(DOD = seq.Date(min(DOD), max(DOD), by="day"))
 
-#set NAs to 0 
+# set NAs to 0 
 counts2_post$n <- ifelse(is.na(counts2_post$n), 0, counts2_post$n) 
 
+# export 
 counts2_post %>%
+  verify(ncol(counts2_post) == 3) %>%
+  verify(not_na(counts2_post$n)) %>%
   write_delim(files$output4, delim="|")
 
 ###done###
+
