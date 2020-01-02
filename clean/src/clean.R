@@ -30,10 +30,13 @@ death1 <- readr::read_delim(files$input1, delim="|") %>%
   mutate_at(vars(status,dateb_20190821), as.factor) 
 
 # retain only people with status "dead" and add in dates with no deaths
-death1 <-
-  filter(death1, status == "dead") %>%
+death1 <-filter(death1, status == "dead")
+
+# unit tests
+death1 %>%
+  verify(ncol(death1) == 4 & (nrow(death1) == 105)) %>% 
+  verify(is.factor(status)) %>%
   write_delim(files$output1, delim="|")
-stopifnot(ncol(death1) == 4 & (nrow (death1) == 105)) 
 
 death2 <- readr::read_delim(files$input2, delim="|") %>%
   clean_names() %>%
@@ -42,10 +45,14 @@ death2 <- readr::read_delim(files$input2, delim="|") %>%
   mutate_at(vars(status, dateb_20190821), as.factor)
 
 # retain only people with status "dead" and add in dates with no deaths
-death2 <-
-  filter(death2, status == "dead") %>%
-write_delim(files$output2, delim="|")
-stopifnot(ncol(death2) == 4 & (nrow (death2) == 678))
+death2 <-filter(death2, status == "dead")
+
+# unit tests
+death2 %>%
+  verify(is.factor(status)) %>%
+  verify(is.factor(dateb_20190821)) %>%
+  write_delim(files$output2, delim="|")
+
 
 ######done####
 
