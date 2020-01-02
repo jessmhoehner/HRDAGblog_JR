@@ -14,9 +14,11 @@ pacman::p_load(dplyr,tidyverse,readr,assertr, ggplot2,scales,incidence,tinytex)
 
 ## Introduction {-}
 
-Having been a big fan of HRDAG's work and fellow alumna of Emory's Rollin's School of Public Health, I have been delighted to have had opportunities to chat with both Megan and Patrick over the last year. I was equally thrilled when Patrick asked if I might want to work on an epidemiological problem the team had been presented with. While I had read about the organization's modular workflow (link) and watched Patrick's talk on how to do principled data processing (link), a lot of it was initially beyond my scope as someone who had only formally learned SAS and dabbled in self-taught Python and R. I fully admit to my R code looking suspiciously similar to all of the examples of amateur coding that Tarak uses in his post on why .Rproj is harmful to reproducible and auditable data science (link). 
+Having been a big fan of HRDAG's work and fellow alumna of Emory's Rollin's School of Public Health, I am delighted to have had opportunities to chat with both Megan and Patrick over the last year.I was equally thrilled when Patrick asked if I would be willing to assist on a project. Eager to jump in to a crash course in the HRDAG process necessitated by the immediacy of the need for an answer for the client I had many a late night cursing Hadley Wickham (sorry, Hadley, you're awesome and so is the tidyverse) and truly enjoyed every part of this process and being able to contribute even just a tiny bit to HRDAG's amazing work. 
 
-Excited to help out where I could and learn from a master, I was undettered by the prospect of a crash course in the HRDAG process necessitated by the inherent immediacy of the need for an answer; were the data suggestive of an epidemic or not? To that end and with a great deal of Patrick's guidance I began to shift towards working mainly in the command line as opposed to R Studio and to start thinking of scripts in terms of a larger project architecture as opposed to one-off bits of code that I'd write per project. 
+With the import of what an answer would mean for our client's activism in mind and with a great deal of Patrick's guidance I shifted towards working mainly in the command line as opposed to R Studio, learning Vim, and to generally start thinking of scripts in terms of a larger project architecture as opposed to one-off scripts I would write per project. 
+
+While I had read about the organization's modular workflow (link) and watched Patrick's talk on principled data processing (link), a lot of it was initially beyond my scope as someone who had only formally learned SAS and dabbled in self-taught Python and R. I fully admit to my R code looking very much like the examples of amateur coding that Tarak used in his recent post on why .Rproj is harmful to reproducible and auditable data science (link).
 
 As I worked, Patrick also encouraged me to keep notes on what I liked and disliked about the process, where I felt it made things easier and where I noticed friction. The following post summarizes those notes and the work that went into determining the answers to the client's question.
 
@@ -30,21 +32,19 @@ For this project I have a clean task, a test task, and a write task each with it
 
 I start with the clean task. In the input folder of this task I include the two datasets of with reported deaths, the src folder contains the R code to clean up the code. I used RStudio to test the code for bugs (with frequent restarts and fresh environments) and use Microsoft Visual Studio Code to update the code that gets pushed to the project Github repository. I had a small bug early on with an error message I didn't want to immediately address so I created an issue on the GitHub to pick it back up later. I knew where the code had issues but I could count on the rest of it working as expected if (when) I'd need to spend time on other projects. This also had the added benefit (trap?) of making me feel like I'd actually made progress instead of staring down the endless empty field of .R file with however many tasks left to code. Win!
 
-The first dataset includes initial deaths reported from 12 June 2019 -- 10 September 2019. The second file contains additional deaths reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine if the number of deaths reported during a specific time period appeared to be unusually high, and the relationship of these reported detahs to dates of external events. 
+The first dataset includes initial deaths reported from 12 June 2019 -- 10 September 2019. The second file contains additional deaths reported from 1 January 2019 -- 14 December 2019. Our client would like us to determine if the number of deaths reported during a specific time period are unusually high, and the nature of the relationship of these deaths to dates of external events. 
 
-To clean the data, we check for any out of bounds dates, any values where one level of a variable may be coded different ways (ex: "seventeen" instead of "17"), and make sure that we don't have strings of text where we expect to see numbers and vicer versa. In this case we use informal (instead of manual) unit tests. This means that instead of checking the dimensions or the top 5 rows of a dataset visually, we specify some condition the data has to meet and tell it to stop running if that condition is not met. #FIXME: need to put in the tests
+To clean the data, we check that variables are formatted correctly and for any values where one level of a variable may be coded different ways (ex: "seventeen" instead of "17"), and make sure that we don't have strings of text where we expect to see numbers and vice versa. In this case we use informal (instead of manual) unit tests. This means that instead of checking the dimensions or the top 5 rows of a dataset visually, we use the assertr package to specify some condition the data has to meet and tell our code to stop running if that condition is not met. 
+
+#FIXME: need to put in the tests. 
 
 We also canonicalize the data. This process refers to making sure that the names of the variables we are comparing are standard across the datasets if we were to combine them. We are working with two datasets here and since they overlkap in terms of when they were collected, we'd like to keep them seperate while still having variables named consistently.
 
-Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person's status is "Not_death". 
+Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person's status is "Not_death". We are also interested in deaths occuring prior to or following a specific date so we created a variable indicating whether or not a death occured prior to or following that date. 
 
-We are also interested in a couple of dates of interest so we created a variable indicating whether or not a death occured prior to or following that date. 
+We assume these data are true and that they represent a sample rather than a complete record of all people who have died in this time period. Any conclusions we come to as a result of our analyses are contingent on these data being true and come with the caveat that this sample is likely biased and we don't know what we don't know.
 
-Since this is a sample and not a complete record of all people who have died in this time period, we expect that this data is incomplete but we cannot say to what extent our results will be generalizable to the population from which these data were obtained. 
-
-The data are cleaned as part of the clean task and all of that code is stored in the clean.R file in the clean/src folder.
-
-To use the clean data, we pull it from the clean task's output folder.
+The data are cleaned as part of the clean task and all of that code is stored in the clean.R file in the clean/src folder.To use the clean data, we pull it from the clean task's output folder.
 
 ```{r, clean, message=FALSE}
 files <- list(input1=here::here("clean/output/death1_clean.txt"),
