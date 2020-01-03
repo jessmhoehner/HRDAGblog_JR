@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Author: PB
-# Maintainer(s): PB
+# Author: JR
+# Maintainer(s): JR, PB
 # License: (c) HRDAG 2019, GPL v2 or newer
 #
 # HRDAGblog_JR/clean/Makefile
@@ -11,7 +11,7 @@ HERE := $(shell git rev-parse --show-toplevel)
 
 .PHONY: all clean
 
-all: output/death1_clean.txt
+all: output/death1_clean.txt \
      output/death2_clean.txt
 
 clean:

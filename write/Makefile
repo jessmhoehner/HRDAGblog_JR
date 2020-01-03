@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Author: PB
-# Maintainer(s): PB
+# Author: JR
+# Maintainer(s): JR, PB
 # License: (c) HRDAG 2019, GPL v2 or newer
 #
 #HRDAGblog_JR/write/Makefile
@@ -17,12 +17,11 @@ clean:
 
 output/HRDAGblogpost_JR.pdf: \
 		src/write.Rmd \
-		$(HERE)/clean/output/deathdata_1_122219.txt
-		$(HERE)/clean/output/deathdata_2_122219.tx
+		$(HERE)/clean/output/death1_clean.txt \
+		$(HERE)/clean/output/death2_clean.txt
 	-rm src/HRDAGblogpost_JR.pdf src/write.tex
 	Rscript -e "rmarkdown::render('$<')"
-	mv src/HRDAGblogpost_JR.pdf output/
-	mv src/*png output/
-	-rm src/write.tex
+	mv src/*.pdf src/*.png output/
+	-rm src/*.tex
 
 # done.
