@@ -11,14 +11,12 @@
 require(pacman)
 p_load(dplyr,styler,tidyverse,forcats,readr,janitor,assertr)
 
-files <- list(input1=here::here("clean/input/death_data_1_122219.txt"),
-              input2=here::here("clean/input/death_data_2_122219.txt"),
-              output1=here::here("clean/output/death1_clean.txt"),
-              output2=here::here("clean/output/death2_clean.txt"))
+files <- list(input1=here::here("clean/input/death1_imported.txt"),
+              input2=here::here("clean/input/death2_imported.txt"),
+              output1=here::here("clean/output/death1_cleaned.txt"),
+              output2=here::here("clean/output/death2_cleaned.txt"))
 
 stopifnot(is.list(files)== TRUE)
-
-# why did we want these in rds files?
 
 # set boundaries for date of interest 
 dt_boundary_21 <- as.Date("2019-08-21")
@@ -52,7 +50,6 @@ death2 %>%
   verify(is.factor(status)) %>%
   verify(is.factor(dateb_20190821)) %>%
   write_delim(files$output2, delim="|")
-
 
 ######done####
 

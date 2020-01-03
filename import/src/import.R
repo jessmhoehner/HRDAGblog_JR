@@ -16,18 +16,21 @@ require(here)
 
 getargs <- function() {
 	list(
-		 input = here("import/input/death1_import.txt"),
-		 input = here("import/input/death2_import.txt"),
-		 output = here("import/output/death1_imported.txt"),
-		 output = here("import/output/death2_imported.txt"))
+		 input1 = here("import/input/death1_import.txt"),
+		 input2 = here("import/input/death2_import.txt"),
+		 output1 = here("import/output/death1_imported.txt"),
+		 output2 = here("import/output/death2_imported.txt"))
 }
 
 
 main <- function() {
     args <- getargs()
-	read_excel(args$input, sheet="RAW DATA") %>%
+	read_delim(args$input1, delim= "|") %>%
 		clean_names() %>%
-		write_delim(args$output, delim="|")
+		write_delim(args$output1, delim="|")
+	read_delim(args$input2, delim= "|") %>%
+	  clean_names() %>%
+	  write_delim(args$output2, delim="|")
 }
 
 

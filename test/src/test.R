@@ -11,8 +11,8 @@
 require(pacman)
 p_load(dplyr,styler,tidyverse,readr,assertr)
 
-files <- list(input1 = here::here("clean/output/death1_clean.txt"),
-              input2 = here::here("clean/output/death2_clean.txt"),
+files <- list(input1 = here::here("clean/output/death1_cleaned.txt"),
+              input2 = here::here("clean/output/death2_cleaned.txt"),
               output1 = here::here("test/output/counts1_pre.txt"),
               output2 = here::here("test/output/counts1_post.txt"),
               output3 = here::here ("test/output/counts2_pre.txt"),
@@ -82,4 +82,3 @@ counts2_post %>%
   write_delim(files$output4, delim="|")
 
 ###done###
-
