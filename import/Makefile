@@ -19,12 +19,12 @@ clean:
 
 output/death1_imported.txt: \
 		src/import.R \
-		$(HERE)/import/death1_import.txt
+		$(HERE)/import/input/death1_import.txt
 	Rscript --vanilla $<
-		
+
 output/death2_imported.txt: \
 		src/import.R \
-		$(HERE) import/death2_import.txt
+		$(HERE)/import/input/death2_import.txt
 	Rscript --vanilla $<
 
 # done.

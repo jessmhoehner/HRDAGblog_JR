@@ -11,28 +11,28 @@
 require(pacman)
 p_load(dplyr,styler,tidyverse,forcats,readr,janitor,assertr)
 
-files <- list(input1=here::here("clean/input/death1_imported.txt"),
-              input2=here::here("clean/input/death2_imported.txt"),
+files <- list(input1=here::here("import/output/death1_imported.txt"),
+              input2=here::here("import/output/death2_imported.txt"),
               output1=here::here("clean/output/death1_cleaned.txt"),
               output2=here::here("clean/output/death2_cleaned.txt"))
 
 stopifnot(is.list(files)== TRUE)
 
-# set boundaries for date of interest 
+# set boundaries for date of interest
 dt_boundary_21 <- as.Date("2019-08-21")
 
 death1 <- readr::read_delim(files$input1, delim="|") %>%
   clean_names() %>%
   mutate(DOD = as.Date(`date`, "%Y/%m/%d")) %>%
   mutate(dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
-  mutate_at(vars(status,dateb_20190821), as.factor) 
+  mutate_at(vars(status,dateb_20190821), as.factor)
 
 # retain only people with status "dead" and add in dates with no deaths
 death1 <-filter(death1, status == "dead")
 
 # unit tests
 death1 %>%
-  verify(ncol(death1) == 4 & (nrow(death1) == 105)) %>% 
+  verify(ncol(death1) == 4 & (nrow(death1) == 105)) %>%
   verify(is.factor(status)) %>%
   write_delim(files$output1, delim="|")
 
