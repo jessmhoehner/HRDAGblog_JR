@@ -10,18 +10,18 @@ HERE := $(shell git rev-parse --show-toplevel)
 
 .PHONY: all clean
 
-all: output/HRDAGblogpost_JR.pdf
+all: output/write.html
 
 clean:
 	rm output/*
 
-output/HRDAGblogpost_JR.pdf: \
+output/write.html: \
 		src/write.Rmd \
 		$(HERE)/clean/output/deaths1.csv \
 		$(HERE)/clean/output/deaths2.csv
-	-rm src/HRDAGblogpost_JR.pdf src/write.tex
+	-rm src/write.html src/write.md
 	Rscript -e "rmarkdown::render('$<')"
-	mv src/*.pdf src/*.png output/
-	-rm src/*.tex
+	mv src/*.html src/*.png output/
+	-rm src/*.md
 
 # done.
