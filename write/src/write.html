@@ -426,8 +426,8 @@ summary {
 <p>Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person’s status is “Not_death”. We are also interested in reported deaths occurring prior to or following a specific date so we created a variable indicating whether or not a death occurred prior to or following that date.</p>
 <p>The data are cleaned as part of the clean task and all of that code is stored in the clean.R file in the clean/src folder. To use the clean data, we pull it from the clean task’s output folder.</p>
 <p>The modularity had the added benefit of making it feel as though I had made progress as I finished each task instead of staring down the endless empty field of .R file.</p>
-<pre class="r"><code>files &lt;- list(input1=here::here(&quot;clean/output/death1_cleaned.txt&quot;),
-              input2=here::here(&quot;clean/output/death2_cleaned.txt&quot;))
+<pre class="r"><code>files &lt;- list(input1=here::here(&quot;clean/output/deaths1.csv&quot;),
+              input2=here::here(&quot;clean/output/deaths2.csv&quot;))
 
 death1 &lt;- readr::read_delim(files$input1, delim=&quot;|&quot;)
 

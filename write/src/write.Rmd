@@ -49,8 +49,8 @@ The data are cleaned as part of the clean task and all of that code is stored in
 The modularity had the added benefit of making it feel as though I had made progress as I finished each task instead of staring down the endless empty field of .R file.
 
 ```{r, clean, message=FALSE}
-files <- list(input1=here::here("clean/output/death1_cleaned.txt"),
-              input2=here::here("clean/output/death2_cleaned.txt"))
+files <- list(input1=here::here("clean/output/deaths1.csv"),
+              input2=here::here("clean/output/deaths2.csv"))
 
 death1 <- readr::read_delim(files$input1, delim="|")
 

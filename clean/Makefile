@@ -11,20 +11,20 @@ HERE := $(shell git rev-parse --show-toplevel)
 
 .PHONY: all clean
 
-all: output/death1_cleaned.txt \
-     output/death2_cleaned.txt
+all: output/deaths1.csv \
+     output/deaths2.csv
 
 clean:
 	rm output/*
 
-output/death1_cleaned.txt: \
+output/deaths1.csv: \
 		src/clean.R \
-		$(HERE)/import/output/death1_imported.txt
+		$(HERE)/import/output/deaths1.csv
 	Rscript --vanilla $<
 		
-output/death2_cleaned.txt: \
+output/deaths2.csv: \
 		src/clean.R \
-		$(HERE)/import/output/death2_imported.txt
+		$(HERE)/import/output/deaths2.csv
 	Rscript --vanilla $<
 
 # done.

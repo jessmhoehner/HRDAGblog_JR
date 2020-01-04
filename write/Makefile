@@ -17,8 +17,8 @@ clean:
 
 output/HRDAGblogpost_JR.pdf: \
 		src/write.Rmd \
-		$(HERE)/clean/output/death1_clean.txt \
-		$(HERE)/clean/output/death2_clean.txt
+		$(HERE)/clean/output/deaths1.csv \
+		$(HERE)/clean/output/deaths2.csv
 	-rm src/HRDAGblogpost_JR.pdf src/write.tex
 	Rscript -e "rmarkdown::render('$<')"
 	mv src/*.pdf src/*.png output/

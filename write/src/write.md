@@ -47,8 +47,8 @@ The modularity had the added benefit of making it feel as though I had made prog
 
 
 ```r
-files <- list(input1=here::here("clean/output/death1_cleaned.txt"),
-              input2=here::here("clean/output/death2_cleaned.txt"))
+files <- list(input1=here::here("clean/output/deaths1.csv"),
+              input2=here::here("clean/output/deaths2.csv"))
 
 death1 <- readr::read_delim(files$input1, delim="|")
 

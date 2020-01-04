@@ -16,10 +16,10 @@ require(here)
 
 getargs <- function() {
 	list(
-		 input1 = here("import/input/death1_import.txt"),
-		 input2 = here("import/input/death2_import.txt"),
-		 output1 = here("import/output/death1_imported.txt"),
-		 output2 = here("import/output/death2_imported.txt"))
+		 input1 = here("import/input/deaths1.csv"),
+		 input2 = here("import/input/deaths2.csv"),
+		 output1 = here("import/output/deaths1.csv"),
+		 output2 = here("import/output/deaths2.csv"))
 }
 
 

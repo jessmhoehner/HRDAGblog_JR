@@ -9,14 +9,14 @@
 # HRDAGblog_JR/clean/src/clean.R
 #
 require(pacman)
-p_load(dplyr,styler,tidyverse,forcats,readr,janitor,assertr)
+p_load(dplyr, styler, tidyverse, forcats, readr, janitor, assertr)
 
-files <- list(input1=here::here("import/output/death1_imported.txt"),
-              input2=here::here("import/output/death2_imported.txt"),
-              output1=here::here("clean/output/death1_cleaned.txt"),
-              output2=here::here("clean/output/death2_cleaned.txt"))
+files <- list(input1=here::here("import/output/deaths1.csv"),
+              input2=here::here("import/output/deaths2.csv"),
+              output1=here::here("clean/output/deaths2.csv"),
+              output2=here::here("clean/output/deaths2.csv"))
 
-stopifnot(is.list(files)== TRUE)
+stopifnot(is.list(files) == TRUE)
 
 # set boundaries for date of interest
 dt_boundary_21 <- as.Date("2019-08-21")
@@ -25,10 +25,10 @@ death1 <- readr::read_delim(files$input1, delim="|") %>%
   clean_names() %>%
   mutate(DOD = as.Date(`date`, "%Y/%m/%d")) %>%
   mutate(dateb_20190821 = ifelse(date < dt_boundary_21, "pre", "post"))  %>%
-  mutate_at(vars(status,dateb_20190821), as.factor)
+  mutate_at(vars(status, dateb_20190821), as.factor)
 
 # retain only people with status "dead" and add in dates with no deaths
-death1 <-filter(death1, status == "dead")
+death1 <- filter(death1, status == "dead")
 
 # unit tests
 death1 %>%
@@ -43,7 +43,7 @@ death2 <- readr::read_delim(files$input2, delim="|") %>%
   mutate_at(vars(status, dateb_20190821), as.factor)
 
 # retain only people with status "dead" and add in dates with no deaths
-death2 <-filter(death2, status == "dead")
+death2 <- filter(death2, status == "dead")
 
 # unit tests
 death2 %>%
