@@ -30,7 +30,7 @@ To make the goals of each task more clear, each task has a Makefile. The Makefil
 
 ## Import {-}
 
-I start with `import/`. This is the task in which we directly place the data we receive from clients. Data we recieve are placed in the input folder of this task, acted on by the code in the src folder to import them via the Makefile, and output to the output folder.
+I start with `import/`. This is the task in which we directly place the data we receive from clients. Data we receive are placed in the input folder of this task, acted on by the code in the src folder to import them via the Makefile, and output to the output folder.
 
 ## Clean {-}
 
