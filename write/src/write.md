@@ -1,3 +1,4 @@
+
 ---
 title: 'From Scripts to Projects: Learning a Modular, Auditable, and Reproducible
   Workflow'
@@ -9,6 +10,7 @@ output:
     highlight: "default"
     toc: yes
 ---
+
 
 
 ## Introduction {-}
