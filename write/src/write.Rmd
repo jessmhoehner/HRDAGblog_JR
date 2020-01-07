@@ -29,7 +29,7 @@ With the import of what our answer could mean for our client's activism in mind 
 
 At the risk of falling into the caveat fallacy, any conclusions we came to as a result of our analyses are contingent on these data being true and come with the caveat that we don't know what we don't know.
 
-To begin the project, we started with a task. Each task is a microcosm of the entire project and at HGRAG this facilitates the team's collaboration across time zones and programming languages. It also results in projects which are auditable and reproducible. Anyone looking at the code can determine exactly how output was produced and anyone working on a task at anytime can pick it up and recreate the same output. This project included the following  five tasks; `import/`, `clean/`, `test/`, and `write/`. Each with its own Makefile, input folder for files coming into the task, output folder for files produced by the task, and src folder for source code to do the task. 
+To begin the project, we started with a task. The file structure of each task is a microcosm of the entire project. Inputs enter the input folder, are acted upon by the code in the src folder, and are output to the output folder. In that same way, projects start with inputs, are acted upon by tasks in the workflow, and are output as results overall. Breaking up work into tasks facilitates the team's collaboration across time zones and programming languages, one task could be performed in Python and another in R and neither analyst would have to even know. The task structure also results in projects which are auditable and reproducible. Anyone looking at the code can determine exactly how output in a given task was produced and anyone working on a task at anytime can pick it up and recreate the same output. This project included the following  five tasks; `import/`, `clean/`, `test/`, and `write/`. Each with its own Makefile, input folder for files coming into the task, output folder for files produced by the task, and src folder for source code to do the task. 
 
 To make the goals of each task clear, each task has a Makefile. The Makefile serves as an outline of each task not only for our benefit, but mainly for the computer to read and execute. Each file can be run from a command line terminal simply by calling "make `[name of task]/`. Imagine being able to work on a group project with team members around the world, and still have an auditable trail of each person's work. The Makefile acts as clear and traceable scaffolding. For more information on Makefiles check out Mike Bostock's [post](https://bost.ocks.org/mike/make/) and Jenny Bryan's [post](https://www.tidyverse.org/blog/2017/12/workflow-vs-script/). Writing and using Makefiles for the first time was probably one of the most challenging aspects of learning this workflow but it was extremely rewarding to see the whole project work with (practically) one click. 
 
@@ -45,15 +45,15 @@ The first data set includes initial deaths reported from 12 June 2019 -- 10 Sept
 
 To clean the data, we make sure that we don't have strings of text where we expect to see numbers and vice-versa using informal unit tests. This means that instead of running the code and interactively checking the dimensions or the top 5 rows of a data set visually, we use the [assertr](https://cran.r-project.org/web/packages/assertr/index.html) package to specify some condition the data has to meet and tell our code to stop running if that condition is not met. This allows us to run `make` with confidence that our output will look as expected or it will not run at all. 
 
-We also canonize the data. This means ensuring that the names of the variables we are comparing are standard across the data sets if we were to combine them. We are working with two data sets and since they likely overlap in terms of which deaths reported they contain, we'd like to keep them separate while still having variables named consistently.
+We also canonicalize the data. This means ensuring that the names of the variables we are comparing are standard across the data sets if we were to combine them. We are working with two data sets and since they likely overlap in terms of which deaths reported they contain, we'd like to keep them separate while still having variables named consistently.
 
 Since we are interested in examining only those cases in which people have been reported as dead, we remove all rows where the person's status is "Not_death". We are also interested in reported deaths occurring prior to or following a specific date so we created a variable indicating whether or not a death occurred prior to or following that date. 
 
 The modularity of the workflow had the added benefit of making it feel as though I had made progress as I finished each task instead of staring down the endless empty field of .R file. 
 
 ```{r, clean, message=FALSE}
-files <- list(input1=here::here("clean/output/deaths1.csv"),
-              input2=here::here("clean/output/deaths2.csv"))
+files <- list(input1=here::here("HRDAG/HRDAGblog_JR/clean/output/deaths1.csv"),
+              input2=here::here("HRDAG/HRDAGblog_JR/clean/output/deaths2.csv"))
 
 death1 <- readr::read_delim(files$input1, delim="|")
 
@@ -148,9 +148,9 @@ mu2pre <- round(mean(cts2pre$n))
 mu2post <- round(mean(cts2post$n))
 
 #test
-res1 <-poisson.test(mu1pre, 1, mu1post, alternative = "g", conf.level = 0.95)
+res1 <-poisson.test(mu1post, 1, mu1pre, alternative = "g", conf.level = 0.95)
 
-res2 <- poisson.test(mu2pre, 1, mu2post, alternative = "g", conf.level = 0.95)
+res2 <- poisson.test(mu2post, 1, mu2pre, alternative = "g", conf.level = 0.95)
 ```
 
 In the first data set, prior to 21 August 21 2019, there was an average of `r mu1pre` death reported per day. Following 21 August 2019 there was an average of  `r mu1post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.86). 
@@ -167,7 +167,7 @@ Finally, in what struck me as the coolest technical part of this process, is the
 
 Collaborating with HRDAG, specifically Dr. Patrick Ball, on this project has been an incredible learning opportunity. Throughout this project I began learning how to look at data analysis from the very macro ("How many tasks do I have?") to the very micro ("Can I pipe this line?") levels. I began to learn how to use the distance inherent in the job of looking at data points and the modularity of the workflow to help me stay focused. This has resulted in a fundamental shift in the way I work and I will continue to learn and improve in using this process as I move forward in my career. As a statistician I am used to having a comfortable amount of psychological distance from the people my work is impacting. Rather than seeing this distance in opposition to the ability to do strong work, it is absolutely necessary that I have it to do the best work technically possible. Working on this project was like a coding bootcamp and professional trial by fire in the best way possible. I learned more than I ever imagined about both the technical and personal aspects of statistics in human rights work and my dearest hope is that that the conclusions we came to were useful in suporting our client's work on the ground.
 
-The project architecture structure discussed in this post, with discrete tasks using Makefiles, was developed by [Drs. Scott Weikart](https://hrdag.org/people/scott-weikart-phd/) and [Jeff Klingner](https://hrdag.org/people/jeff-klingner-phd/) and formalized around 2007. I am incredibly grateful for Tarak Shah's motivating post on the dangers of .Rproj style of project management, for [Dr. Amelia Hoover Green's](https://hrdag.org/people/amelia-hoover-green-phd/) detailed post on what it means to clean and canonize data, Dr. Megan Price's encouragement to work in this field, and Dr. Patrick Ball's invitation to collaborate, his patient explanations, and detailed feedback throughout this project.
+The project architecture structure discussed in this post, with discrete tasks using Makefiles, was developed by [Drs. Scott Weikart](https://hrdag.org/people/scott-weikart-phd/) and [Jeff Klingner](https://hrdag.org/people/jeff-klingner-phd/) and formalized around 2007. I am incredibly grateful for Tarak Shah's motivating post on the dangers of .Rproj style of project management, for [Dr. Amelia Hoover Green's](https://hrdag.org/people/amelia-hoover-green-phd/) detailed [post](https://hrdag.org/2013/03/13/mse-collection-cleaning-canonicalization-data/) on what it means to clean and canonicalize data, Dr. Megan Price's encouragement to work in this field, and Dr. Patrick Ball's invitation to collaborate, his patient explanations, and detailed feedback throughout this project.
 
 ```{r session_info, message=FALSE, include=FALSE}
 sessionInfo()
