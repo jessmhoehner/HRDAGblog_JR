@@ -52,8 +52,8 @@ Since we are interested in examining only those cases in which people have been 
 The modularity of the workflow had the added benefit of making it feel as though I had made progress as I finished each task instead of staring down the endless empty field of .R file. 
 
 ```{r, clean, message=FALSE}
-files <- list(input1=here::here("HRDAG/HRDAGblog_JR/clean/output/deaths1.csv"),
-              input2=here::here("HRDAG/HRDAGblog_JR/clean/output/deaths2.csv"))
+files <- list(input1=here::here("clean/output/deaths1.csv"),
+              input2=here::here("clean/output/deaths2.csv"))
 
 death1 <- readr::read_delim(files$input1, delim="|")
 
@@ -150,12 +150,12 @@ mu2post <- round(mean(cts2post$n))
 #test
 res1 <-poisson.test(mu1post, 1, mu1pre, alternative = "g", conf.level = 0.95)
 
-res2 <- poisson.test(mu2post, 1, mu2pre, alternative = "g", conf.level = 0.95)
+res2 <- poisson.test(mu1post, 1, mu2pre, alternative = "g", conf.level = 0.95)
 ```
 
-In the first data set, prior to 21 August 21 2019, there was an average of `r mu1pre` death reported per day. Following 21 August 2019 there was an average of  `r mu1post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.86). 
+In the first data set, prior to 21 August 21 2019, there was an average of `r mu1pre` death reported per day. Following 21 August 2019 there was an average of  `r mu1post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.26). 
 
-In the second data set, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day. Following 21 August 2019 there was an average of  `r mu2post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.60). 
+In the second data set, prior to 21 August 21 2019, there was an average of `r mu2pre` deaths reported per day. Following 21 August 2019 there was an average of  `r mu2post` deaths reported per day. We cannot reject the hypothesis that the mean number of deaths reported after 21 August 2019 is not significantly greater than the mean number of deaths reported prior to 21 August 2019 at the 95% confidence interval (p = 0.59). 
 
 Working on the uncertain assumption that this is a reliable list of deaths, the frequency of deaths reported during this time period is consistent with what we would expect to see with a normally occurring random process, that is, nothing we’re seeing from these data indicates anything out of the ordinary. I will admit to being incredibly relieved but also waking up in a cold sweat regularly hoping I hadn't made some terrible mistake and arrived at the wrong conclusion. After all, bad data analysis is worse than none at all.
 
